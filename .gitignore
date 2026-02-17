@@ -41,8 +41,8 @@ venv.bak/
 /staticfiles/
 /static_root/
 
-# Media files
-/media/
+# Media files - UNCOMMENT line below if you don't want to commit media files
+# /media/
 
 # IDE
 .vscode/
