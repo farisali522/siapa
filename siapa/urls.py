@@ -21,15 +21,6 @@ from django.conf.urls.static import static
 from pemilu2024 import views
 from django.shortcuts import render
 
-def custom_404(request, exception):
-    return render(request, '404.html', status=404)
-
-def custom_500(request):
-    return render(request, '500.html', status=500)
-
-handler404 = 'siapa.urls.custom_404'
-handler500 = 'siapa.urls.custom_500'
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('get_kecamatan/', views.get_kecamatan, name='get_kecamatan'),
