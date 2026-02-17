@@ -22,11 +22,12 @@ from pemilu2024 import views
 from django.shortcuts import render
 
 urlpatterns = [
+    path('', views.landing, name='landing'),
     path('admin/', admin.site.urls),
     path('get_kecamatan/', views.get_kecamatan, name='get_kecamatan'),
     path('get_desa/', views.get_desa, name='get_desa'),
 ]
 
-# Serve media files in development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Serve media and static files in development
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

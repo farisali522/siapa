@@ -2,6 +2,9 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from .models import Kecamatan, KelurahanDesa
 
+def landing(request):
+    return render(request, 'landing.html')
+
 def get_kecamatan(request):
     kabupaten_id = request.GET.get('kabupaten_id')
     kecamatans = Kecamatan.objects.filter(kabupaten_kota_id=kabupaten_id).order_by('nama')
