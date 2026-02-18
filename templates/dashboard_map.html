@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Peta Digital SIAPA</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --maroon: #800000;
+            --gold: #D4AF37;
+            --dark: #1a1a1a;
+            --white: #ffffff;
+            --gray: #f8f9fa;
+            --text-dark: #333333;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--gray);
+            color: var(--text-dark);
+            overflow: hidden;
+        }
+
+        .dashboard-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar Light Mode */
+        .sidebar {
+            width: 320px;
+            background: var(--white);
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.05);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .brand-logo {
+            width: 45px;
+            height: 45px;
+            background: var(--maroon);
+            border: 2px solid var(--gold);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 24px;
+            color: var(--gold);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .brand-text h1 {
+            margin: 0;
+            font-size: 20px;
+            letter-spacing: 2px;
+            color: var(--maroon);
+        }
+
+        .brand-text p {
+            margin: 0;
+            font-size: 10px;
+            color: var(--gold);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .stats-card {
+            background: var(--gray);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stats-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #666;
+            font-weight: 400;
+        }
+
+        .stats-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--maroon);
+        }
+
+        /* Map Container */
+        #map {
+            flex-grow: 1;
+            height: 100%;
+            background: #eef;
+        }
+
+        /* Leaflet Overrides */
+        .leaflet-container {
+            background: #eef !important;
+        }
+
+        .leaflet-bar a {
+            background-color: var(--white) !important;
+            color: var(--maroon) !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* Custom Popup Style */
+        .leaflet-popup-content-wrapper {
+            background: var(--white);
+            color: var(--text-dark);
+            border: 1px solid var(--maroon);
+            border-radius: 12px;
+        }
+
+        .leaflet-popup-tip {
+            background: var(--white);
+        }
+
+        .popup-header {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+
+        .popup-header h2 {
+            margin: 0;
+            font-size: 16px;
+            color: var(--maroon);
+        }
+
+        .btn-back {
+            margin-top: auto;
+            background: var(--maroon);
+            color: white;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid var(--gold);
+            transition: all 0.3s;
+        }
+
+        .btn-back:hover {
+            box-shadow: 0 0 15px rgba(128, 0, 0, 0.3);
+            background: #a00000;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <div class="sidebar">
+        <div class="brand">
+            <div class="brand-logo">S</div>
+            <div class="brand-text">
+                <h1>SIAPA</h1>
+                <p>Digital Map Analysis</p>
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <h3>Wilayah Terdaftar</h3>
+            <div class="value" id="count-wilayah">0</div>
+        </div>
+
+        <div class="stats-card">
+            <h3>Progress Entry</h3>
+            <div class="value" style="font-size: 18px;">Monitoring Aktif</div>
+            <p style="font-size: 12px; color: #28a745; margin: 5px 0 0 0;">● Data Real-time</p>
+        </div>
+
+        <div style="margin-top: 20px; font-size: 12px; color: #999;">
+            <p>Gerindra SIAPA - Sistem Informasi Administrasi & Pusat Analisis</p>
+        </div>
+
+        <a href="/admin/" class="btn-back">Kembali ke Admin</a>
+    </div>
+
+    <div id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    var map = L.map('map', {
+        zoomControl: true,
+        attributionControl: false
+    }).setView([-6.9175, 107.6191], 9);
+
+    // KEMBALI KE PETA BIASA (OpenStreetMap Standard)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19
+    }).addTo(map);
+
+    // Function to load GeoJSON data from our API
+    function loadGeoData() {
+        fetch('/get_geo_data/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.features.length > 0) {
+                    document.getElementById('count-wilayah').innerText = data.features.length;
+
+                    var geoLayer = L.geoJSON(data, {
+                        style: function(feature) {
+                            return {
+                                color: feature.properties.warna || "#800000",
+                                weight: 2,
+                                opacity: 0.8,
+                                fillOpacity: 0.3,
+                                fillColor: feature.properties.warna || "#800000"
+                            };
+                        },
+                        onEachFeature: function(feature, layer) {
+                            var popupContent = `
+                                <div class="popup-header">
+                                    <h2>${feature.properties.nama}</h2>
+                                </div>
+                                <div style="font-size: 12px; color: #333;">
+                                    <p style="margin: 5px 0;">Status: <span style="color: #28a745; font-weight: bold;">Terpetakan</span></p>
+                                    <p style="margin: 5px 0 0 0; color: #666;">Klik wilayah untuk detail rekapitulasi</p>
+                                </div>
+                            `;
+                            layer.bindPopup(popupContent);
+                            
+                            // Hover effect
+                            layer.on('mouseover', function() {
+                                this.setStyle({ fillOpacity: 0.6, weight: 3 });
+                            });
+                            layer.on('mouseout', function() {
+                                this.setStyle({ fillOpacity: 0.3, weight: 2 });
+                            });
+                        }
+                    }).addTo(map);
+
+                    // Fit bounds to all territories
+                    map.fitBounds(geoLayer.getBounds(), { padding: [50, 50] });
+                }
+            })
+            .catch(error => console.error('Error fetching GeoJSON:', error));
+    }
+
+    // Load data on start
+    loadGeoData();
+
+</script>
+
+</body>
+</html>

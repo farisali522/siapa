@@ -5,7 +5,12 @@ from django import forms
 from import_export import resources, fields, widgets
 from import_export.admin import ImportExportModelAdmin
 from import_export.formats.base_formats import XLSX
-from .models import Partai, PaslonPilpres, PaslonPilkada, KabupatenKota, Kecamatan, KelurahanDesa, DapilRI, DapilProvinsi, DapilKabKota, CalegRI, CalegProvinsi, CalegKabKota, SuaraPilpres, RekapTPSDPT, RekapTPSDPTKecamatan, SuaraPilpresKecamatan
+from .models import (
+    Partai, PaslonPilpres, PaslonPilkada, KabupatenKota, Kecamatan, KelurahanDesa, 
+    DapilRI, DapilProvinsi, DapilKabKota, CalegRI, CalegProvinsi, CalegKabKota, 
+    SuaraPilpres, RekapTPSDPT, RekapTPSDPTKecamatan, SuaraPilpresKecamatan,
+    GeoKokab, GeoKecamatan, GeoDesKel
+)
 from functools import lru_cache
 
 # =========================================================================
@@ -64,9 +69,22 @@ class KabupatenKotaResource(resources.ModelResource):
     def get_import_display(self, row):
         return row.get('nama')
 
+class GeoKokabInline(admin.StackedInline):
+    model = GeoKokab
+    verbose_name = "Data Peta Batas Wilayah (GeoJSON)"
+    verbose_name_plural = "Data Peta Batas Wilayah (GeoJSON)"
+    readonly_fields = ['preview_peta']
+    extra = 0
+    max_num = 1
+
+    def preview_peta(self, obj):
+        return GeoKokabAdmin.preview_peta(self, obj)
+    preview_peta.short_description = "Preview Peta"
+
 @admin.register(KabupatenKota)
 class KabupatenKotaAdmin(ImportExportModelAdmin, PaslonAdminMixin):
     resource_class = KabupatenKotaResource
+    inlines = [GeoKokabInline]
     list_display = ['nama', 'rekap_tps_dpt', 'rekap_pilpres', 'lihat_kecamatan']
     search_fields = ['nama']
     ordering = ['nama']
@@ -246,6 +264,18 @@ class SuaraPilpresKecamatanAdminForm(forms.ModelForm):
             'admin/js/suara_pilpres_calculator.js',
         )
 
+class GeoKecamatanInline(admin.StackedInline):
+    model = GeoKecamatan
+    verbose_name = "Data Peta Batas Wilayah (GeoJSON)"
+    verbose_name_plural = "Data Peta Batas Wilayah (GeoJSON)"
+    readonly_fields = ['preview_peta']
+    extra = 0
+    max_num = 1
+
+    def preview_peta(self, obj):
+        return GeoKokabAdmin.preview_peta(self, obj)
+    preview_peta.short_description = "Preview Peta"
+
 class RekapTPSDPTKecamatanInline(admin.StackedInline):
     model = RekapTPSDPTKecamatan
     can_delete = False
@@ -284,7 +314,7 @@ class SuaraPilpresKecamatanInline(admin.StackedInline):
 
 @admin.register(Kecamatan)
 class KecamatanAdmin(ImportExportModelAdmin, PaslonAdminMixin):
-    inlines = [RekapTPSDPTKecamatanInline, SuaraPilpresKecamatanInline]
+    inlines = [RekapTPSDPTKecamatanInline, SuaraPilpresKecamatanInline, GeoKecamatanInline]
     
     list_display = ['info_kecamatan', 'rekap_tps_dpt', 'rekap_pilpres', 'progress_data_desa', 'lihat_desa']
     list_per_page = 10
@@ -597,10 +627,22 @@ class KelurahanDesaResource(resources.ModelResource):
     def get_import_display(self, row):
         return f"{row.get('desa_kelurahan')} -> {row.get('kecamatan')} ({row.get('kabupaten')})"
 
+class GeoDesKelInline(admin.StackedInline):
+    model = GeoDesKel
+    verbose_name = "Data Peta Batas Wilayah (GeoJSON)"
+    verbose_name_plural = "Data Peta Batas Wilayah (GeoJSON)"
+    readonly_fields = ['preview_peta']
+    extra = 0
+    max_num = 1
+
+    def preview_peta(self, obj):
+        return GeoKokabAdmin.preview_peta(self, obj)
+    preview_peta.short_description = "Preview Peta"
+
 @admin.register(KelurahanDesa)
 class KelurahanDesaAdmin(ImportExportModelAdmin, PaslonAdminMixin):
     resource_class = KelurahanDesaResource
-    inlines = [RekapTPSDPTInline, SuaraPilpresInline]
+    inlines = [RekapTPSDPTInline, SuaraPilpresInline, GeoDesKelInline]
     list_display = ['info_desa', 'status_tps_dpt', 'status_pilpres']
     list_display_links = ['info_desa']
     list_filter = ['kabupaten', 'kecamatan']
@@ -1416,3 +1458,123 @@ class PaslonPilkadaAdmin(ImportExportModelAdmin, PaslonAdminMixin):
             obj.no_urut
         )
     info_paslon.short_description = "Pasangan Calon"
+
+# =========================================================================
+# BAGIAN 4: GEOSPATIAL ADMIN (PETA DIGITAL)
+# =========================================================================
+
+class GeoColorForm(forms.ModelForm):
+    """Form khusus untuk menambahkan Color Picker"""
+    class Meta:
+        widgets = {
+            'warna_area': forms.TextInput(attrs={'type': 'color', 'style': 'height: 40px; width: 100px; cursor: pointer; border: none; padding: 2px; background: none;'}),
+        }
+
+class GeoAdminMixin:
+    """Mixin untuk fungsi bersama antara data geospatial (Kokab, Kec, Deskel)"""
+    
+    def changelist_view(self, request, extra_context=None):
+        """Menambahkan tombol besar di bagian atas list view (Main Dashboard)"""
+        extra_context = extra_context or {}
+        extra_context['dashboard_button_html'] = format_html(
+            '<div style="margin-bottom: 20px; padding: 15px; background: #FFF9E6; border: 1px solid #D4AF37; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">'
+            '<div><strong style="font-size: 18px; color: #800000; display: flex; align-items: center; gap: 10px;">'
+            '<span style="background: #800000; color: white; padding: 5px 10px; border-radius: 8px; font-size: 14px;">PRO</span> WAR ROOM - PETA DIGITAL</strong>'
+            '<p style="margin: 5px 0 0 0; color: #555; font-size: 13px;">Klik tombol di samping untuk beralih ke Dashboard Peta Interaktif (Full Screen).</p></div>'
+            '<a href="/map/" target="_blank" style="background: #800000; color: white !important; padding: 12px 25px; font-weight: 700; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 10px; transition: all 0.3s; border: 1px solid #D4AF37;">'
+            '🌍 BUKA PETA ANALISIS</a>'
+            '</div>'
+        )
+        return super().changelist_view(request, extra_context=extra_context)
+
+    def preview_peta(self, obj):
+        if not obj or not obj.vektor_wilayah:
+            return "Belum ada data vektor untuk ditampilkan."
+        
+        import json
+        from django.utils.safestring import mark_safe
+        
+        try:
+            clean_data = json.loads(obj.vektor_wilayah)
+            clean_json = json.dumps(clean_data)
+        except Exception as e:
+            return format_html('<span style="color: red;">Format GeoJSON Error: {}</span>', str(e))
+
+        map_id = f"map_{obj.id or 'new'}"
+        return format_html(
+            '''
+            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+            <div id="{0}" style="height: 450px; width: 100%; border: 2px solid #800000; border-radius: 8px; background: #eee; margin-top: 10px;"></div>
+            <script>
+                (function() {{
+                    var mapLayer;
+                    var initCount = 0;
+                    var interval = setInterval(function() {{
+                        if (window.L) {{
+                            clearInterval(interval);
+                            initializeMap();
+                        }}
+                        if (initCount > 50) clearInterval(interval);
+                        initCount++;
+                    }}, 200);
+
+                    function initializeMap() {{
+                        var map = L.map('{0}').setView([0, 0], 2);
+                        L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
+                            attribution: '&copy; OpenStreetMap'
+                        }}).addTo(map);
+                        
+                        try {{
+                            var geoData = {1};
+                            mapLayer = L.geoJSON(geoData, {{
+                                style: function(feature) {{
+                                    return {{
+                                        color: document.getElementById('id_warna_area').value || "{2}",
+                                        weight: 3,
+                                        fillOpacity: 0.4
+                                    }};
+                                }}
+                            }}).addTo(map);
+                            map.fitBounds(mapLayer.getBounds(), {{ padding: [30, 30] }});
+
+                            // LIVE COLOR UPDATE!
+                            document.getElementById('id_warna_area').addEventListener('input', function(e) {{
+                                if (mapLayer) {{
+                                    mapLayer.setStyle({{ color: e.target.value }});
+                                }};
+                            }});
+
+                        }} catch (e) {{
+                            console.error("Leaflet Parse Error:", e);
+                        }}
+                    }}
+                }})();
+            </script>
+            ''',
+            map_id,
+            mark_safe(clean_json),
+            obj.warna_area or "#CC0000"
+        )
+    preview_peta.short_description = "Monitor Peta Digital"
+
+@admin.register(GeoKokab)
+class GeoKokabAdmin(GeoAdminMixin, admin.ModelAdmin):
+    form = GeoColorForm
+    list_display = ['kokab', 'warna_area', 'last_update']
+    search_fields = ['kokab__nama']
+    readonly_fields = ['preview_peta']
+
+@admin.register(GeoKecamatan)
+class GeoKecamatanAdmin(GeoAdminMixin, admin.ModelAdmin):
+    form = GeoColorForm
+    list_display = ['kecamatan', 'warna_area']
+    search_fields = ['kecamatan__nama']
+    readonly_fields = ['preview_peta']
+
+@admin.register(GeoDesKel)
+class GeoDesKelAdmin(GeoAdminMixin, admin.ModelAdmin):
+    form = GeoColorForm
+    list_display = ['deskel', 'warna_area']
+    search_fields = ['deskel__desa_kelurahan']
+    readonly_fields = ['preview_peta']

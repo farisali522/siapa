@@ -162,6 +162,13 @@ JAZZMIN_SETTINGS = {
     "welcome_sign": "Welcome to SIAPA",
     "copyright": "Sistem Informasi Administrasi & Pusat Analisis",
     "changeform_format": "horizontal_tabs",
+    # Link Permanen di Top Menu Admin
+    "topmenu_links": [
+        {"name": "Beranda", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "Peta Digital", "url": "/map/", "new_window": True, "icon": "fas fa-map-marked-alt"},
+    ],
+    "show_sidebar": True,
+    "navigation_expanded": True,
 }
 # Import Export Settings (Fix for Windows FileNotFoundError)
 IMPORT_EXPORT_TMP_STORAGE_CLASS = 'import_export.tmp_storages.CacheStorage'

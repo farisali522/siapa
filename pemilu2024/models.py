@@ -583,3 +583,72 @@ class SuaraPilpresKecamatan(models.Model):
 
     def __str__(self):
         return f"Suara Pilpres Kec. {self.kecamatan.nama}"
+
+# ============================================
+# GEOSPATIAL MODELS (PETA DIGITAL)
+# ============================================
+
+class GeoKokab(models.Model):
+    """Data Vektor Batas Wilayah Kabupaten/Kota"""
+    kokab = models.OneToOneField(
+        KabupatenKota, 
+        on_delete=models.CASCADE, 
+        related_name='geodata',
+        verbose_name="Kabupaten/Kota"
+    )
+    vektor_wilayah = models.TextField(
+        verbose_name="Data Vektor (GeoJSON)", 
+        help_text="Paste kode GeoJSON batas wilayah di sini",
+        blank=True, null=True
+    )
+    warna_area = models.CharField(max_length=7, default="#CC0000", verbose_name="Warna Area (Hex)")
+    last_update = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Geo Kokab"
+        verbose_name_plural = "Peta Batas Kokab"
+
+    def __str__(self):
+        return f"Peta {self.kokab.nama}"
+
+class GeoKecamatan(models.Model):
+    """Data Vektor Batas Wilayah Kecamatan"""
+    kecamatan = models.OneToOneField(
+        Kecamatan, 
+        on_delete=models.CASCADE, 
+        related_name='geodata',
+        verbose_name="Kecamatan"
+    )
+    vektor_wilayah = models.TextField(
+        verbose_name="Data Vektor (GeoJSON)",
+        blank=True, null=True
+    )
+    warna_area = models.CharField(max_length=7, default="#00CC00")
+
+    class Meta:
+        verbose_name = "Geo Kecamatan"
+        verbose_name_plural = "Peta Batas Kecamatan"
+
+    def __str__(self):
+        return f"Peta Kec. {self.kecamatan.nama}"
+
+class GeoDesKel(models.Model):
+    """Data Vektor Batas Wilayah Desa/Kelurahan"""
+    deskel = models.OneToOneField(
+        KelurahanDesa, 
+        on_delete=models.CASCADE, 
+        related_name='geodata',
+        verbose_name="Desa/Kelurahan"
+    )
+    vektor_wilayah = models.TextField(
+        verbose_name="Data Vektor (GeoJSON)",
+        blank=True, null=True
+    )
+    warna_area = models.CharField(max_length=7, default="#0000CC")
+
+    class Meta:
+        verbose_name = "Geo DesKel"
+        verbose_name_plural = "Peta Batas DesKel"
+
+    def __str__(self):
+        return f"Peta Desa {self.deskel.desa_kelurahan}"

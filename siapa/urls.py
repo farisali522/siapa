@@ -24,6 +24,8 @@ from django.shortcuts import render
 urlpatterns = [
     path('', views.landing, name='landing'),
     path('admin/', admin.site.urls),
+    path('map/', views.dashboard_peta, name='dashboard_peta'),
+    path('get_geo_data/', views.get_geo_data, name='get_geo_data'),
     path('get_kecamatan/', views.get_kecamatan, name='get_kecamatan'),
     path('get_desa/', views.get_desa, name='get_desa'),
 ]
