@@ -1,0 +1,195 @@
+<aside id="sidebar" class="sidebar">
+
+
+    <ul class="nav-list">
+        {% if user.is_superuser %}
+        <!-- Dashboard -->
+        <li class="nav-item">
+            <a href="{% url 'dashboard_overview' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard_overview' %}active{% endif %}">
+                <i class="fas fa-chart-line nav-icon"></i>
+                <span class="nav-text">Dashboard</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'dashboard_peta' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard_peta' %}active{% endif %}">
+                <i class="fas fa-map-marked-alt nav-icon"></i>
+                <span class="nav-text">Peta Digital</span>
+            </a>
+        </li>
+        
+
+        <li class="nav-section-title">Administrator</li>
+        <li class="nav-item">
+            <a href="/xxx/" class="nav-link btn-admin">
+                <i class="fas fa-cogs nav-icon"></i>
+                <span class="nav-text">Panel Admin</span>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+
+    <!-- Footer Sidebar -->
+    <div class="sidebar-footer">
+
+        <p>&copy; 2026 SIAPA v2.0</p>
+    </div>
+</aside>
+
+<div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<style>
+    /* Sidebar Styles */
+    .sidebar {
+        width: var(--sidebar-width);
+        position: fixed;
+        top: var(--nav-height);
+        left: 0;
+        height: calc(100vh - var(--nav-height));
+        background: var(--white);
+        border-right: 1px solid var(--border);
+        transition: var(--transition);
+        z-index: 1000;
+        overflow-y: auto;
+        padding-bottom: 20px;
+        /* Flexbox for footer positioning */
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Desktop Collapsed State */
+    .sidebar.collapsed,
+    body.sidebar-closed .sidebar {
+        left: calc(-1 * var(--sidebar-width));
+    }
+
+    /* Mobile Logic */
+    @media (max-width: 768px) {
+        .sidebar {
+            left: -100%; /* Default hidden on mobile */
+            width: 260px; /* Lebar fixed sama kayak desktop */
+            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar.active {
+            left: 0; /* Slide in on mobile */
+        }
+        
+        /* Reset collapse behavior on mobile */
+        .sidebar.collapsed {
+            left: -100%;
+        }
+    }
+
+    .sidebar-header {
+        padding: 24px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-title {
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #999;
+        letter-spacing: 1px;
+        margin: 0;
+        font-weight: 700;
+    }
+
+    .nav-list {
+        list-style: none;
+        padding: 0;
+        margin: 20px 0;
+    }
+
+    .nav-item {
+        margin-bottom: 4px;
+        padding: 0 12px;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        color: var(--dark);
+        text-decoration: none;
+        border-radius: 10px;
+        transition: var(--transition);
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .nav-link:hover {
+        background: #f8f9fa;
+        color: var(--maroon);
+        padding-left: 20px; /* Slide effect */
+    }
+
+    .nav-link.active {
+        background: rgba(128, 0, 0, 0.08); /* Light Maroon */
+        color: var(--maroon);
+        font-weight: 700;
+        border-left: 4px solid var(--maroon);
+    }
+
+    .nav-icon {
+        width: 24px;
+        font-size: 16px;
+        margin-right: 12px;
+        color: #999;
+        transition: var(--transition);
+    }
+
+    .nav-link:hover .nav-icon, .nav-link.active .nav-icon {
+        color: var(--maroon);
+    }
+
+    .nav-section-title {
+        font-size: 11px;
+        text-transform: uppercase;
+        color: #aaa;
+        padding: 16px 24px 8px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-admin {
+        background: var(--maroon);
+        color: var(--white) !important;
+        margin-top: 20px;
+        justify-content: center;
+        border: 1px solid var(--gold);
+    }
+
+    .btn-admin:hover {
+        background: var(--maroon-light);
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(128, 0, 0, 0.2);
+    }
+    
+    .btn-admin .nav-icon { color: var(--gold); }
+
+    .sidebar-footer {
+        padding: 20px;
+        text-align: center;
+        font-size: 11px;
+        color: #ccc;
+        border-top: 1px solid var(--border);
+        margin-top: auto;
+    }
+
+    /* Overlay for Mobile */
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 900;
+        display: none;
+        backdrop-filter: blur(2px);
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+    }
+</style>

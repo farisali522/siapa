@@ -1,0 +1,195 @@
+<nav class="navbar">
+    <div class="nav-left">
+        <!-- Sidebar Toggle -->
+        <button class="menu-toggle" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Brand -->
+        <a href="{% url 'landing' %}" class="brand">
+            <div class="brand-badge">S</div>
+            <div class="brand-text">
+                <h1>SIAPA</h1>
+                <span>Sistem Informasi & Analisis</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="nav-right">
+        <!-- User Profile Dropdown -->
+        <div class="user-profile" onclick="this.classList.toggle('active')">
+            <div class="user-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <span class="user-name">
+                {% if user.is_authenticated %}
+                    {{ user.username|title }}
+                {% endif %}
+            </span>
+            <!-- Dropdown Content -->
+            <div class="dropdown-content">
+                <a href="{% url 'custom_logout' %}">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<style>
+    /* Navbar Styles */
+    .navbar {
+        height: var(--nav-height);
+        background: var(--white);
+        border-bottom: 2px solid var(--border);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        position: fixed;
+        width: 100%;
+        top: 0;
+        left: 0;
+        z-index: 2000;
+        transition: var(--transition);
+    }
+
+    .nav-left, .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    /* Menu Toggle */
+    .menu-toggle {
+        background: transparent;
+        border: none;
+        color: var(--maroon);
+        font-size: 20px;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 8px;
+        transition: var(--transition);
+    }
+    .menu-toggle:hover { background: rgba(128,0,0,0.05); }
+
+    /* Brand */
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+    }
+
+    .brand-badge {
+        width: 36px;
+        height: 36px;
+        background: var(--maroon);
+        color: var(--gold);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 20px;
+        border: 2px solid var(--gold);
+        box-shadow: 0 4px 8px rgba(128,0,0,0.2);
+    }
+
+    .brand-text h1 {
+        margin: 0;
+        font-size: 18px;
+        color: var(--maroon);
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .brand-text span {
+        font-size: 11px;
+        color: #888;
+        font-weight: 400;
+        letter-spacing: 0.5px;
+    }
+
+    /* User Profile */
+    .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        padding: 8px 12px;
+        border-radius: 12px;
+        transition: var(--transition);
+        position: relative;
+    }
+
+    .user-profile:hover {
+        background: var(--gray);
+    }
+
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        background: var(--maroon);
+        color: var(--white);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+    }
+
+    .user-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--dark);
+    }
+
+    /* Dropdown simple setup */
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: var(--white);
+        min-width: 150px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        border-radius: 12px;
+        padding: 8px;
+        z-index: 1;
+        margin-top: 5px;
+        border: 1px solid var(--border);
+    }
+
+    /* Tampilkan dropdown saat ada class active */
+    .user-profile.active .dropdown-content {
+        display: block;
+        animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .dropdown-content a {
+        color: var(--dark);
+        padding: 10px 12px;
+        text-decoration: none;
+        display: block;
+        font-size: 13px;
+        border-radius: 8px;
+        transition: var(--transition);
+    }
+
+    .dropdown-content a:hover {
+        background: #ffebee;
+        color: var(--maroon);
+    }
+
+    @media (max-width: 768px) {
+        /* .brand-text span { display: none; } */
+        /* .user-name { display: none; } */
+    }
+</style>

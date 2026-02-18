@@ -151,6 +151,9 @@ STATICFILES_FINDERS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Login URL
+LOGIN_URL = 'custom_login'
+
 # Media files (uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -166,6 +169,7 @@ JAZZMIN_SETTINGS = {
     "topmenu_links": [
         {"name": "Beranda", "url": "admin:index", "permissions": ["auth.view_user"]},
         {"name": "Peta Digital", "url": "/map/", "new_window": True, "icon": "fas fa-map-marked-alt"},
+        {"name": "Dashboard UI", "url": "/dashboard/", "new_window": False, "icon": "fas fa-chart-line"},
     ],
     "show_sidebar": True,
     "navigation_expanded": True,

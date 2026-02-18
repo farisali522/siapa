@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard - SIAPA{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --maroon: #800000;
+            --maroon-light: #a00000;
+            --gold: #D4AF37;
+            --gold-light: #F4CF57;
+            --dark: #1a1a1a;
+            --white: #ffffff;
+            --gray: #f4f6f9;
+            --border: rgba(0, 0, 0, 0.08);
+            --nav-height: 70px;
+            --sidebar-width: 260px; /* Lebar Sidebar */
+            --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--gray);
+            color: var(--dark);
+        }
+
+        /* --- LAYOUT STRUCTURE --- */
+        body {
+            padding-top: var(--nav-height); /* Ruang untuk navbar fixed */
+        }
+
+        .wrapper {
+            display: flex;
+            min-height: calc(100vh - var(--nav-height));
+        }
+
+        /* Sidebar akan di-handle oleh sidebar.html (fixed position) */
+        
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width); /* KUNCI: Geser konten ke kanan selebar sidebar */
+            padding: 30px;
+            background-color: var(--gray);
+            min-height: 100%;
+            transition: margin-left 0.3s ease; /* Transisi halus saat sidebar toggle */
+            width: calc(100% - var(--sidebar-width)); /* Mencegah overflow horizontal */
+        }
+        
+        /* State saat Sidebar Collapsed (Desktop) */
+        .main-content.expanded,
+        body.sidebar-closed .main-content {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0; /* Di mobile, konten full width */
+                width: 100%;
+                padding: 20px;
+            }
+            .main-content.expanded {
+                margin-left: 0;
+            }
+        }
+
+        /* --- UTILITIES --- */
+        .card {
+            background: var(--white);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fff;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--maroon);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        h1, h2, h3, h4, h5 { margin-top: 0; }
+
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <script>
+        // Prevent FOUC (Flash of Unstyled Content) for Sidebar
+        if (window.innerWidth > 768) {
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (isCollapsed) {
+                document.body.classList.add('sidebar-closed'); // Helper class for CSS
+            }
+        }
+    </script>
+    {% include 'navbar.html' %}
+
+    <div class="wrapper">
+        <!-- Include Sidebar -->
+        {% include 'sidebar.html' %}
+
+        <!-- Main Content Area -->
+        <main class="main-content" id="mainContent">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Global Toggle Function
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            if (window.innerWidth > 768) {
+                // Desktop Logic: Toggle class di BODY saja (Logic terpusat)
+                document.body.classList.toggle('sidebar-closed');
+                
+                // Simpan state
+                const isClosed = document.body.classList.contains('sidebar-closed');
+                localStorage.setItem('sidebarCollapsed', isClosed);
+            } else {
+                // Mobile Logic: Toggle Active (Overlay)
+                sidebar.classList.toggle('active');
+                if(overlay) overlay.classList.toggle('active');
+            }
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

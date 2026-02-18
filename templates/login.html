@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Masuk - SIAPA</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --maroon: #800000;
+            --maroon-dark: #600000;
+            --gold: #D4AF37;
+            --gold-light: #F4CF57;
+            --dark: #1a1a1a;
+            --white: #ffffff;
+            --gray: #f4f6f9;
+            --border: #e0e0e0;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .login-card {
+            background: var(--white);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        /* Decorative Gold Line */
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, var(--maroon) 0%, var(--gold) 50%, var(--maroon) 100%);
+        }
+
+        .brand-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .brand-logo {
+            width: 60px;
+            height: 60px;
+            background: var(--maroon);
+            color: var(--gold);
+            font-size: 28px;
+            font-weight: 800;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 20px rgba(128, 0, 0, 0.2);
+            border: 2px solid var(--gold);
+        }
+
+        .brand-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--maroon);
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-subtitle {
+            font-size: 14px;
+            color: #888;
+            margin-top: 5px;
+            font-weight: 400;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 8px;
+            margin-left: 4px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            padding-left: 45px; /* Space for icon */
+            border: 2px solid var(--gray);
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            color: var(--dark);
+            transition: all 0.3s ease;
+            background: #fcfcfc;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--maroon);
+            background: var(--white);
+            box-shadow: 0 0 0 4px rgba(128, 0, 0, 0.05);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 42px; /* Adjust based on label height */
+            color: #999;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        .form-input:focus + .input-icon {
+            color: var(--maroon);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            background: var(--maroon);
+            color: var(--white);
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border: 1px solid var(--gold);
+        }
+
+        .btn-login:hover {
+            background: var(--maroon-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(128, 0, 0, 0.2);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .footer-text {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .alert-error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid #c62828;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="login-card">
+            <div class="brand-section">
+                <div class="brand-logo">S</div>
+                <h1 class="brand-title">Selamat Datang</h1>
+                <p class="brand-subtitle">Silakan masuk untuk akses sistem SIAPA</p>
+            </div>
+
+            {% if error %}
+            <div class="alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ error }}</span>
+            </div>
+            {% endif %}
+
+            <form method="POST" action="">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Username / ID</label>
+                    <input type="text" name="username" class="form-input" placeholder="Masukkan username anda" required autofocus>
+                    <i class="fas fa-user input-icon"></i>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+                    <i class="fas fa-lock input-icon" style="top: 42px;"></i>
+                </div>
+
+                <button type="submit" class="btn-login">
+                    Masuk Sekarang <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+
+            <div class="footer-text">
+                &copy; 2026 SIAPA System. Access Restricted.
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

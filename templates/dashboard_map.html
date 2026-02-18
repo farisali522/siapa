@@ -358,7 +358,7 @@
                 margin-left: 0 !important;
                 visibility: visible;
                 opacity: 1;
-                width: 85%;
+                width: 260px; /* Fixed width mobile */
                 box-shadow: 20px 0 40px rgba(0,0,0,0.2);
             }
             .sidebar.active {
@@ -367,9 +367,9 @@
             .sidebar-overlay.active {
                 display: block;
             }
-            .brand-text-container h1 span {
+            /* .brand-text-container h1 span {
                 display: none;
-            }
+            } */
         }
 
         /* Leaflet Tweaks */
@@ -402,8 +402,11 @@
     </div>
 
     <div class="nav-right">
+        <a href="{% url 'dashboard_overview' %}" class="btn-nav-admin" style="margin-right: 10px; background: white; color: var(--maroon) !important;">
+            <i class="fas fa-arrow-left"></i> <span>Dashboard</span>
+        </a>
         <a href="/xxx/" class="btn-nav-admin">
-            <span>Admin Panel</span>
+            <i class="fas fa-cogs"></i> <span>Admin Panel</span>
         </a>
     </div>
 </nav>

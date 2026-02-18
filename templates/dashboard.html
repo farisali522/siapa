@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Utama - SIAPA{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="header-left">
+        <h2 class="page-title">Dashboard Superuser</h2>
+    </div>
+    <div class="header-right">
+        <div class="date-badge">
+            <i class="fas fa-calendar-alt"></i>
+            <span id="currentDate">--/--/----</span>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <!-- Card 1: Total Suara -->
+    <div class="stat-card">
+        <div class="stat-icon bg-blue">
+            <i class="fas fa-vote-yea"></i>
+        </div>
+        <div class="stat-info">
+            <h4>Total Suara Masuk</h4>
+            <div class="value">2,450,120</div>
+            <span class="trend up"><i class="fas fa-arrow-up"></i> +12.5% hari ini</span>
+        </div>
+    </div>
+
+    <!-- Card 2: Total TPS -->
+    <div class="stat-card">
+        <div class="stat-icon bg-green">
+            <i class="fas fa-box-open"></i>
+        </div>
+        <div class="stat-info">
+            <h4>TPS Terinput</h4>
+            <div class="value">15,200 / 25,000</div>
+            <span class="progress-label">Progress 60.8%</span>
+        </div>
+    </div>
+
+    <!-- Card 3: Wilayah -->
+    <div class="stat-card">
+        <div class="stat-icon bg-maroon">
+            <i class="fas fa-map-marked-alt"></i>
+        </div>
+        <div class="stat-info">
+            <h4>Cakupan Wilayah</h4>
+            <div class="value">27 Kab/Kota</div>
+            <span class="subtitle">Jawa Barat</span>
+        </div>
+    </div>
+
+    <!-- Card 4: Isu Data -->
+    <div class="stat-card">
+        <div class="stat-icon bg-orange">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-info">
+            <h4>Data Anomali</h4>
+            <div class="value text-orange">12</div>
+            <span class="action-link"><a href="#">Review Data &rarr;</a></span>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
+<div class="content-grid">
+    <!-- Left Column: Chart -->
+    <div class="chart-section card">
+        <div class="card-header">
+            <h3>Perolehan Suara Sementara</h3>
+            <div class="card-actions">
+                <button class="btn-sm"><i class="fas fa-sync-alt"></i> Refresh</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="chart-placeholder">
+                <p>Grafik Analisis Suara (Placeholder)</p>
+                <!-- Nanti bisa diisi Chart.js -->
+                <div class="dummy-bar" style="height: 60%;"></div>
+                <div class="dummy-bar" style="height: 85%;"></div>
+                <div class="dummy-bar" style="height: 45%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Recent Activity -->
+    <div class="activity-section card">
+        <div class="card-header">
+            <h3>Aktivitas Terbaru</h3>
+        </div>
+        <div class="card-body">
+            <ul class="activity-list">
+                {% if recent_actions %}
+                    {% for action in recent_actions %}
+                    <li class="activity-item">
+                        <div class="dot {% if action.is_addition %}bg-green{% elif action.is_change %}bg-blue{% elif action.is_deletion %}bg-maroon{% else %}bg-orange{% endif %}"></div>
+                        <div class="act-details">
+                            <span class="act-time">{{ action.action_time|date:"H:i, d M" }}</span>
+                            <p>
+                                <strong>{{ action.user.username }}</strong> 
+                                {% if action.is_addition %}menambahkan{% elif action.is_change %}mengubah{% elif action.is_deletion %}menghapus{% endif %}
+                                {{ action.content_type.name }} "<i>{{ action.object_repr }}</i>"
+                            </p>
+                        </div>
+                    </li>
+                    {% endfor %}
+                {% else %}
+                    <li class="activity-item">
+                        <div class="dot bg-orange"></div>
+                        <div class="act-details">
+                            <p>Belum ada aktivitas terbaru.</p>
+                        </div>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard Specific Styles */
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .page-title {
+        font-size: 28px;
+        margin: 0;
+        color: var(--dark);
+        font-weight: 800;
+    }
+
+    .page-subtitle {
+        color: #888;
+        margin-top: 5px;
+        font-size: 14px;
+    }
+
+    .date-badge {
+        background: var(--white);
+        padding: 10px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        color: var(--maroon);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 24px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: var(--white);
+        padding: 24px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+        transition: var(--transition);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    }
+
+    .stat-card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: white;
+    }
+
+    .bg-blue { background: #007bff; }
+    .bg-green { background: #28a745; }
+    .bg-maroon { background: var(--maroon); }
+    .bg-orange { background: #fd7e14; }
+    .text-orange { color: #fd7e14; }
+
+    .stat-info h4 { margin: 0 0 5px 0; color: #888; font-size: 13px; font-weight: 600; text-transform: uppercase; }
+    .stat-info .value { font-size: 24px; font-weight: 800; color: var(--dark); margin-bottom: 5px; }
+    
+    .trend.up { color: #28a745; font-size: 12px; font-weight: 600; }
+    .progress-label { color: #007bff; font-size: 12px; font-weight: 600; }
+    .action-link a { color: #fd7e14; font-size: 12px; text-decoration: none; font-weight: 600; }
+
+    /* Content Grid */
+    .content-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+        .content-grid { grid-template-columns: 1fr; }
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        border: 1px solid var(--border);
+        background: #f8f9fa;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        color: #666;
+    }
+
+    /* Charts */
+    .chart-placeholder {
+        height: 300px;
+        background: #fcfcfc;
+        border-radius: 12px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-around;
+        padding: 20px;
+        border: 1px dashed #ddd;
+        position: relative;
+    }
+
+    .activity-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .activity-item {
+        display: flex;
+        gap: 15px;
+        padding-bottom: 20px;
+        border-left: 2px solid #eee;
+        padding-left: 20px;
+        position: relative;
+    }
+
+    .activity-item:last-child { border-left: none; }
+
+    .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        position: absolute;
+        left: -7px;
+        top: 0;
+    }
+
+    .act-time { font-size: 11px; color: #999; font-weight: 600; }
+    .act-details p { margin: 4px 0 0 0; font-size: 13px; color: #444; }
+
+    .dummy-bar {
+        width: 40px;
+        background: #eee;
+        border-radius: 4px 4px 0 0;
+    }
+    .dummy-bar:nth-child(2) { background: var(--maroon); }
+    .dummy-bar:nth-child(3) { background: var(--gold); }
+    .dummy-bar:nth-child(4) { background: #333; }
+
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set current date
+    const now = new Date();
+    document.getElementById('currentDate').innerText = now.toLocaleDateString('id-ID', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+</script>
+{% endblock %}

@@ -25,9 +25,12 @@ urlpatterns = [
     path('', views.landing, name='landing'),
     path('xxx/', admin.site.urls),
     path('map/', views.dashboard_peta, name='dashboard_peta'),
+    path('dashboard/', views.dashboard_overview, name='dashboard_overview'),
     path('get_geo_data/', views.get_geo_data, name='get_geo_data'),
     path('get_kecamatan/', views.get_kecamatan, name='get_kecamatan'),
     path('get_desa/', views.get_desa, name='get_desa'),
+    path('login/', views.custom_login, name='custom_login'),
+    path('logout/', views.custom_logout, name='custom_logout'),
 ]
 
 from django.urls import re_path
