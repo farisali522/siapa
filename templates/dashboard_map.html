@@ -53,6 +53,7 @@
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
+            justify-content: space-between;
             padding: 0 24px;
             position: fixed;
             top: 0;
@@ -60,6 +61,42 @@
             right: 0;
             z-index: 3000;
             box-shadow: 0 2px 15px rgba(0,0,0,0.04);
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-nav-admin {
+            background: var(--maroon);
+            color: var(--white) !important;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+            border: 1px solid var(--gold);
+        }
+
+        .btn-nav-admin:hover {
+            background: var(--maroon-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(128,0,0,0.2);
+        }
+
+        @media (max-width: 768px) {
+            .btn-nav-admin span { display: none; }
+            .btn-nav-admin { padding: 10px; }
         }
 
         .navbar-toggle {
@@ -317,15 +354,23 @@
 
 <!-- Top Navbar -->
 <nav class="navbar">
-    <button class="navbar-toggle" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-    </button>
-    
-    <div class="navbar-brand">
-        <div class="brand-logo-small">S</div>
-        <div class="brand-text-container">
-            <h1>SIAPA <span>Digital Map Analysis Tool</span></h1>
+    <div class="nav-left">
+        <button class="navbar-toggle" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <div class="navbar-brand">
+            <div class="brand-logo-small">S</div>
+            <div class="brand-text-container">
+                <h1>SIAPA <span>Digital Map Analysis Tool</span></h1>
+            </div>
         </div>
+    </div>
+
+    <div class="nav-right">
+        <a href="/xxx/" class="btn-nav-admin">
+            <span>Admin Panel</span>
+        </a>
     </div>
 </nav>
 
@@ -354,11 +399,9 @@
         </div>
 
         <div class="sidebar-footer">
-            <div style="font-size: 11px; color: #999; margin-bottom: 20px; line-height: 1.5;">
-                <strong>Gerindra SIAPA v2.0</strong><br>
-                Sistem Analisis Strategi Digital
+            <div style="font-size: 11px; color: #999; line-height: 1.5;">
+                <strong>SIAPA v2.0</strong>
             </div>
-            <a href="/xxx/" class="btn-back">Kembali ke Admin</a>
         </div>
     </aside>
 
@@ -371,6 +414,11 @@
         </div>
     </div>
 </div>
+
+<!-- Thin Global Footer -->
+<footer class="global-footer">
+    &copy; 2026 Gerindra SIAPA - Sistem Informasi Administrasi & Pusat Analisis Digital. Hak Cipta Dilindungi Undang-Undang.
+</footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
