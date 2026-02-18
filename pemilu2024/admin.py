@@ -371,13 +371,28 @@ class KecamatanAdmin(admin.ModelAdmin, PaslonAdminMixin):
 
     def rekap_tps_dpt(self, obj):
         """Dashboard TPS & DPT tingkat Kecamatan"""
-        # Data Tingkat Kecamatan
-        has_data = hasattr(obj, 'rekap_tps_dpt_kecamatan')
-        tps = obj.rekap_tps_dpt_kecamatan.tps_pemilu if has_data else 0
-        dpt = obj.rekap_tps_dpt_kecamatan.dpt_pemilu if has_data else 0
+        try:
+            # Akses aman OneToOne
+            resmi = obj.rekap_tps_dpt_kecamatan
+            tps = resmi.tps_pemilu
+            dpt = resmi.dpt_pemilu
+            has_data = True
+        except Exception: # Catch ObjectDoesNotExist
+            tps = 0
+            dpt = 0
+            has_data = False
 
-        progress_tps = self.get_progress_bar(obj.filled_tps_count, obj.total_desa_count, "TPS")
-        progress_dpt = self.get_progress_bar(obj.filled_dpt_count, obj.total_desa_count, "DPT")
+        # Hitung manual karena annotate dihapus
+        total_desa = obj.kelurahandesa_set.count()
+        filled_tps = obj.kelurahandesa_set.filter(
+            rekap_tps_dpt__tps_pemilu__gt=0
+        ).count()
+        filled_dpt = obj.kelurahandesa_set.filter(
+            rekap_tps_dpt__dpt_pemilu__gt=0
+        ).count()
+
+        progress_tps = self.get_progress_bar(filled_tps, total_desa, "TPS")
+        progress_dpt = self.get_progress_bar(filled_dpt, total_desa, "DPT")
 
         if not has_data:
             return format_html('<div style="min-width: 140px; color: #999; font-size: 11px;">Belum diinput</div>')
@@ -440,8 +455,11 @@ class KecamatanAdmin(admin.ModelAdmin, PaslonAdminMixin):
     def rekap_pilpres(self, obj):
         """Dashboard Pilpres tingkat Kecamatan"""
         # Data Tingkat Kecamatan
-        has_data = hasattr(obj, 'rekap_suara_pilpres_kecamatan')
-        resmi = obj.rekap_suara_pilpres_kecamatan if has_data else None
+        try:
+            # Akses aman OneToOne
+            resmi = obj.rekap_suara_pilpres_kecamatan
+        except Exception: # Catch ObjectDoesNotExist
+            resmi = None
         
         if not resmi:
             return format_html('<div style="min-width: 200px; color: #999; font-size: 11px;">Belum diinput</div>')
