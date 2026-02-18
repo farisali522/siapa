@@ -214,6 +214,29 @@
 
     @media (max-width: 900px) {
         .content-grid { grid-template-columns: 1fr; }
+        
+        /* Mobile Header Adjustments */
+        .dashboard-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .header-right {
+            width: 100%;
+        }
+
+        .date-badge {
+            width: 100%;
+            justify-content: center;
+            font-size: 13px;
+            padding: 8px;
+        }
+        
+        .page-title {
+            font-size: 22px;
+        }
     }
 
     .btn-sm {
