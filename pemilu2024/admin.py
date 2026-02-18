@@ -623,25 +623,21 @@ class KelurahanDesaAdmin(ImportExportModelAdmin, PaslonAdminMixin):
     info_desa.admin_order_field = 'desa_kelurahan'
 
     def status_tps_dpt(self, obj):
-        """Tampilan Dashboard Mini TPS & DPT Desa"""
+        """Tampilan Dashboard Mini TPS & DPT Desa (Samain format dengan Kecamatan)"""
         if not hasattr(obj, 'rekap_tps_dpt'):
             return format_html('<div style="display: flex; justify-content: center; min-width: 140px;"><img src="/static/admin/img/icon-no.svg" alt="False"></div>')
         
         rekap = obj.rekap_tps_dpt
         
-        def get_stat_row(label, tps, dpt, color):
-            return format_html(
-                '<div style="display: flex; align-items: center; gap: 5px; margin-bottom: 2px; white-space: nowrap;">'
-                '<span style="color: {}; font-weight: bold; font-size: 9px; min-width: 45px;">{}:</span>'
-                '<span style="font-weight: bold; color: #333; font-size: 11px;">{} TPS</span>'
-                '<span style="color: #777; font-size: 10px;">/ {} DPT</span>'
-                '</div>',
-                color, label, tps, f"{dpt:,}"
-            )
-
-        row_pemilu = get_stat_row("PEMILU", rekap.tps_pemilu, rekap.dpt_pemilu, "#007bff")
-
-        return format_html('<div style="min-width: 140px; padding: 2px 0;">{}</div>', row_pemilu)
+        return format_html(
+            '<div style="min-width: 160px; padding: 2px 0;">'
+            '<div style="display: flex; gap: 5px; white-space: nowrap;">'
+            '<span style="background: #17a2b8; color: white; padding: 2px 5px; border-radius: 3px; font-size: 10px; font-weight: bold;">TPS: {}</span>'
+            '<span style="background: #6c757d; color: white; padding: 2px 5px; border-radius: 3px; font-size: 10px; font-weight: bold;">DPT: {}</span>'
+            '</div>'
+            '</div>',
+            rekap.tps_pemilu, f"{rekap.dpt_pemilu:,}"
+        )
     status_tps_dpt.short_description = "Data TPS/DPT"
 
     def status_pilpres(self, obj):
@@ -726,13 +722,31 @@ class PartaiResource(resources.ModelResource):
         report_skipped = True
 
 @admin.register(Partai)
-class PartaiAdmin(ImportExportModelAdmin, PaslonAdminMixin):
-    resource_class = PartaiResource
+class PartaiAdmin(admin.ModelAdmin, PaslonAdminMixin): # GANTI INI (ImportExportModelAdmin -> admin.ModelAdmin)
+    #resource_class = PartaiResource
     list_display = ['info_lengkap']
-    list_display_links = ['info_lengkap']
+    # list_display_links = ['info_lengkap']
+    list_display_links = None
     ordering = ['no_urut']
     search_fields = ['nama_partai', 'no_urut']
-    formats = [XLSX]
+    list_filter = ['nama_partai', 'no_urut']
+    #formats = [XLSX]
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # PENGATURAN IZIN (Ubah ke True kalau mau Edit/Tambah/Hapus lagi)
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    def has_add_permission(self, request):
+        """Mencegah Tambah Data Partai Baru"""
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        """Mencegah Edit Data Partai"""
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        """Mencegah Hapus Data Partai"""
+        return False
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     
     def info_lengkap(self, obj):
         return format_html(
@@ -750,15 +764,6 @@ class PartaiAdmin(ImportExportModelAdmin, PaslonAdminMixin):
     info_lengkap.short_description = "Data Partai"
 
 # --- 2.2 DAPIL RI ---
-class DapilRIResource(resources.ModelResource):
-    wilayah = fields.Field(column_name='wilayah', attribute='wilayah', widget=widgets.ManyToManyWidget(KabupatenKota, field='nama', separator=','))
-    class Meta:
-        model = DapilRI
-        fields = ('nama', 'alokasi_kursi', 'wilayah')
-        export_order = ('nama', 'alokasi_kursi', 'wilayah')
-        import_id_fields = ['nama']
-        skip_unchanged = True
-
 class DapilRIAdminForm(forms.ModelForm):
     class Meta:
         model = DapilRI
@@ -776,26 +781,61 @@ class DapilRIAdminForm(forms.ModelForm):
         return wilayah
 
 @admin.register(DapilRI)
-class DapilRIAdmin(ImportExportModelAdmin):
-    resource_class = DapilRIResource
+class DapilRIAdmin(admin.ModelAdmin):
     form = DapilRIAdminForm
-    list_display = ['nama', 'alokasi_kursi', 'daftar_wilayah']
+    list_display = ['nama', 'alokasi_kursi', 'cakupan_wilayah', 'aksi_caleg']
+    list_per_page = 10
+    list_display_links = None
     filter_horizontal = ['wilayah']
     search_fields = ['nama']
-    formats = [XLSX]
-    def daftar_wilayah(self, obj): return ", ".join([w.nama for w in obj.wilayah.all()])
-    daftar_wilayah.short_description = "Cakupan Wilayah"
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related('wilayah')
+
+    def cakupan_wilayah(self, obj):
+        """Daftar Kabupaten/Kota dalam Dapil RI dengan style badge"""
+        kab_list = ", ".join([w.nama for w in obj.wilayah.all()])
+        if not kab_list: return format_html('<span class="text-muted small">-</span>')
+        
+        return format_html(
+            '<div style="max-width: 350px; line-height: 1.4;">'
+            '<span class="badge badge-secondary" style="font-size: 9px;">KABUPATEN / KOTA</span><br>'
+            '<span class="text-dark small">{}</span>'
+            '</div>', kab_list
+        )
+    cakupan_wilayah.short_description = "Cakupan Wilayah"
+
+    def aksi_caleg(self, obj):
+        """Tombol Aksi Khusus untuk Caleg DPR RI"""
+        from django.urls import reverse
+        url = reverse('admin:pemilu2024_calegri_changelist')
+        
+        btn_style = "width: 130px; margin-bottom: 4px; font-weight: bold; text-align: center; display: block;"
+        
+        btn_all = format_html(
+            '<a class="btn btn-sm btn-info" href="{}?dapil__id__exact={}" style="{}">'
+            '<i class="fas fa-users"></i> Semua Caleg</a>',
+            url, obj.id, btn_style
+        )
+        
+        btn_gerindra = format_html(
+            '<a class="btn btn-sm btn-danger" href="{}?dapil__id__exact={}&partai__nama_partai__icontains=GERINDRA" style="{}">'
+            '<i class="fas fa-star"></i> Caleg Gerindra</a>',
+            url, obj.id, btn_style
+        )
+        
+        return format_html('<div style="display: flex; flex-direction: column; align-items: center; min-width: 140px;">{}{}</div>', btn_all, btn_gerindra)
+    aksi_caleg.short_description = "Aksi Monitoring"
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # PENGATURAN IZIN (Ubah ke True kalau mau Edit/Tambah/Hapus lagi)
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    def has_add_permission(self, request): return False
+    def has_change_permission(self, request, obj=None): return False
+    def has_delete_permission(self, request, obj=None): return False
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 # --- 2.3 DAPIL PROVINSI ---
-class DapilProvinsiResource(resources.ModelResource):
-    wilayah = fields.Field(column_name='wilayah', attribute='wilayah', widget=widgets.ManyToManyWidget(KabupatenKota, field='nama', separator=','))
-    class Meta:
-        model = DapilProvinsi
-        fields = ('nama', 'alokasi_kursi', 'wilayah')
-        export_order = ('nama', 'alokasi_kursi', 'wilayah')
-        import_id_fields = ['nama']
-        skip_unchanged = True
-
 class DapilProvinsiAdminForm(forms.ModelForm):
     class Meta:
         model = DapilProvinsi
@@ -813,15 +853,59 @@ class DapilProvinsiAdminForm(forms.ModelForm):
         return wilayah
 
 @admin.register(DapilProvinsi)
-class DapilProvinsiAdmin(ImportExportModelAdmin):
-    resource_class = DapilProvinsiResource
+class DapilProvinsiAdmin(admin.ModelAdmin):
     form = DapilProvinsiAdminForm
-    list_display = ['nama', 'alokasi_kursi', 'daftar_wilayah']
+    list_display = ['nama', 'alokasi_kursi', 'cakupan_wilayah', 'aksi_caleg']
+    list_per_page = 10
+    list_display_links = None
     filter_horizontal = ['wilayah']
     search_fields = ['nama']
-    formats = [XLSX]
-    def daftar_wilayah(self, obj): return ", ".join([w.nama for w in obj.wilayah.all()])
-    daftar_wilayah.short_description = "Cakupan Wilayah"
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related('wilayah')
+
+    def cakupan_wilayah(self, obj):
+        """Daftar Kabupaten/Kota dalam Dapil Provinsi dengan style badge"""
+        kab_list = ", ".join([w.nama for w in obj.wilayah.all()])
+        if not kab_list: return format_html('<span class="text-muted small">-</span>')
+        
+        return format_html(
+            '<div style="max-width: 350px; line-height: 1.4;">'
+            '<span class="badge badge-secondary" style="font-size: 9px;">KABUPATEN / KOTA</span><br>'
+            '<span class="text-dark small">{}</span>'
+            '</div>', kab_list
+        )
+    cakupan_wilayah.short_description = "Cakupan Wilayah"
+
+    def aksi_caleg(self, obj):
+        """Tombol Aksi Khusus untuk Caleg Provinsi"""
+        from django.urls import reverse
+        url = reverse('admin:pemilu2024_calegprovinsi_changelist')
+        
+        btn_style = "width: 130px; margin-bottom: 4px; font-weight: bold; text-align: center; display: block;"
+        
+        btn_all = format_html(
+            '<a class="btn btn-sm btn-info" href="{}?dapil__id__exact={}" style="{}">'
+            '<i class="fas fa-users"></i> Semua Caleg</a>',
+            url, obj.id, btn_style
+        )
+        
+        btn_gerindra = format_html(
+            '<a class="btn btn-sm btn-danger" href="{}?dapil__id__exact={}&partai__nama_partai__icontains=GERINDRA" style="{}">'
+            '<i class="fas fa-star"></i> Caleg Gerindra</a>',
+            url, obj.id, btn_style
+        )
+        
+        return format_html('<div style="display: flex; flex-direction: column; align-items: center; min-width: 140px;">{}{}</div>', btn_all, btn_gerindra)
+    aksi_caleg.short_description = "Aksi Monitoring"
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # PENGATURAN IZIN (Ubah ke True kalau mau Edit/Tambah/Hapus lagi)
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    def has_add_permission(self, request): return False
+    def has_change_permission(self, request, obj=None): return False
+    def has_delete_permission(self, request, obj=None): return False
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 # --- 2.4 DAPIL KAB/KOTA ---
 class DapilKabKotaResource(resources.ModelResource):
@@ -869,20 +953,97 @@ class DapilKabKotaAdminForm(forms.ModelForm):
         return cleaned_data
 
 @admin.register(DapilKabKota)
-class DapilKabKotaAdmin(ImportExportModelAdmin):
-    resource_class = DapilKabKotaResource
+class DapilKabKotaAdmin(admin.ModelAdmin):
     form = DapilKabKotaAdminForm
-    list_display = ['nama', 'alokasi_kursi', 'kabupaten', 'cakupan_kecamatan', 'cakupan_desa']
+    list_display = ['info_dapil', 'alokasi_kursi', 'cakupan_wilayah', 'aksi_caleg']
+    list_per_page = 10
+    list_display_links = None
     list_filter = ['kabupaten']
     search_fields = ['nama', 'kabupaten__nama']
     autocomplete_fields = ['kabupaten']
     filter_horizontal = ['wilayah_kecamatan', 'wilayah_desa']
-    formats = [XLSX]
-    def get_queryset(self, request): return super().get_queryset(request).select_related('kabupaten')
-    def cakupan_kecamatan(self, obj): return ", ".join([k.nama for k in obj.wilayah_kecamatan.all()]) if obj.wilayah_kecamatan.exists() else "-"
-    def cakupan_desa(self, obj): return ", ".join([f"{d.desa_kelurahan} ({d.kecamatan.nama})" for d in obj.wilayah_desa.all()]) if obj.wilayah_desa.exists() else "-"
-    cakupan_kecamatan.short_description = "Cakupan Kecamatan"
-    cakupan_desa.short_description = "Cakupan Desa/Kelurahan"
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('kabupaten').prefetch_related(
+            'wilayah_kecamatan', 
+            'wilayah_desa__kecamatan'
+        )
+
+    def info_dapil(self, obj):
+        """Menampilkan Nama Dapil dan Kabupaten dengan style native Jazzmin"""
+        return format_html(
+            '<div style="line-height: 1.2;">'
+            '<strong class="text-primary" style="font-size: 14px;">{}</strong><br>'
+            '<span class="text-muted small" style="font-weight: 600;">{}</span>'
+            '</div>',
+            obj.nama.upper(),
+            obj.kabupaten.nama if obj.kabupaten else "-"
+        )
+    info_dapil.short_description = "Wilayah Dapil"
+    info_dapil.admin_order_field = 'nama'
+
+    def cakupan_wilayah(self, obj):
+        """Gabungan Kecamatan & Desa (dengan keterangan Kecamatan dalam kurung)"""
+        kec_list = ", ".join([k.nama for k in obj.wilayah_kecamatan.all()])
+        
+        # Desa sekarang menampilkan (Kecamatan) di belakangnya biar informatif
+        desa_list = ", ".join([f"{d.desa_kelurahan} ({d.kecamatan.nama})" for d in obj.wilayah_desa.all()])
+        
+        content = []
+        if kec_list:
+            content.append(format_html(
+                '<div class="mb-1">'
+                '<span class="badge badge-secondary" style="font-size: 9px;">KECAMATAN</span><br>'
+                '<span class="text-dark small">{}</span>'
+                '</div>', kec_list
+            ))
+        
+        if desa_list:
+            content.append(format_html(
+                '<div class="mt-2">'
+                '<span class="badge badge-info" style="font-size: 9px;">DESA / KELURAHAN (KEC)</span><br>'
+                '<span class="text-info small" style="font-style: italic;">{}</span>'
+                '</div>', desa_list
+            ))
+            
+        if not content:
+            return format_html('<span class="text-muted small">-</span>')
+            
+        return format_html('<div style="max-width: 380px; line-height: 1.4;">{}</div>', format_html("".join(map(str, content))))
+    cakupan_wilayah.short_description = "Cakupan Wilayah"
+
+    def aksi_caleg(self, obj):
+        """Tombol Aksi Solid & Gagah (Style Jazzmin Native)"""
+        from django.urls import reverse
+        url = reverse('admin:pemilu2024_calegkabkota_changelist')
+        
+        # Pake btn-sm dan Solid Colors (btn-info & btn-danger)
+        btn_style = "width: 130px; font-weight: bold; text-align: center; margin-bottom: 4px; display: block;"
+        
+        # Link 1: Semua Caleg (Warna Biru Info Solid)
+        btn_all = format_html(
+            '<a class="btn btn-sm btn-info" href="{}?dapil__id__exact={}" style="{}">'
+            '<i class="fas fa-users"></i> Semua Caleg</a>',
+            url, obj.id, btn_style
+        )
+        
+        # Link 2: Khusus Gerindra (Warna Merah Cerah Solid)
+        btn_gerindra = format_html(
+            '<a class="btn btn-sm btn-danger" href="{}?dapil__id__exact={}&partai__nama_partai__icontains=GERINDRA" style="{}">'
+            '<i class="fas fa-star"></i> Caleg Gerindra</a>',
+            url, obj.id, btn_style
+        )
+        
+        return format_html('<div style="display: flex; flex-direction: column; align-items: center; min-width: 140px;">{}{}</div>', btn_all, btn_gerindra)
+    aksi_caleg.short_description = "Aksi Monitoring"
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # PENGATURAN IZIN (Ubah ke True kalau mau Edit/Tambah/Hapus lagi)
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    def has_add_permission(self, request): return False
+    def has_change_permission(self, request, obj=None): return False
+    def has_delete_permission(self, request, obj=None): return False
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 # --- 2.5 CALEG (ALL LEVELS) ---
 class CalegRIResource(resources.ModelResource):
@@ -918,6 +1079,11 @@ class CalegRIAdmin(ImportExportModelAdmin):
     gender_info.short_description = "L/P"
     partai_info.short_description = "Partai"
 
+    def lookup_allowed(self, lookup, value):
+        if lookup in ('partai__nama_partai__icontains', 'dapil__id__exact'):
+            return True
+        return super().lookup_allowed(lookup, value)
+
 class CalegProvinsiResource(resources.ModelResource):
     partai = fields.Field(column_name='partai', attribute='partai', widget=widgets.ForeignKeyWidget(Partai, 'nama_partai'))
     dapil = fields.Field(column_name='dapil', attribute='dapil', widget=widgets.ForeignKeyWidget(DapilProvinsi, 'nama'))
@@ -951,6 +1117,11 @@ class CalegProvinsiAdmin(ImportExportModelAdmin):
     gender_info.short_description = "L/P"
     partai_info.short_description = "Partai"
 
+    def lookup_allowed(self, lookup, value):
+        if lookup in ('partai__nama_partai__icontains', 'dapil__id__exact'):
+            return True
+        return super().lookup_allowed(lookup, value)
+
 class CalegKabKotaResource(resources.ModelResource):
     partai = fields.Field(column_name='partai', attribute='partai', widget=widgets.ForeignKeyWidget(Partai, 'nama_partai'))
     dapil = fields.Field(column_name='dapil', attribute='dapil', widget=widgets.ForeignKeyWidget(DapilKabKota, 'nama'))
@@ -983,6 +1154,10 @@ class CalegKabKotaAdmin(ImportExportModelAdmin):
     nama_caleg.short_description = "Nama Caleg"
     gender_info.short_description = "L/P"
     partai_info.short_description = "Partai"
+    def lookup_allowed(self, lookup, value):
+        if lookup in ('partai__nama_partai__icontains', 'dapil__id__exact'):
+            return True
+        return super().lookup_allowed(lookup, value)   
 
 
 # =========================================================================

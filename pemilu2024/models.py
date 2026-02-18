@@ -110,7 +110,7 @@ class KabupatenKota(models.Model):
     
     class Meta:
         verbose_name = "Kabupaten/Kota"
-        verbose_name_plural = "Data Kabupaten/Kota"
+        verbose_name_plural = "Data Kokab"
         ordering = ['nama']
     
     def __str__(self):
@@ -152,7 +152,7 @@ class KelurahanDesa(models.Model):
 
     class Meta:
         verbose_name = "Kelurahan/Desa"
-        verbose_name_plural = "Data Kelurahan/Desa"
+        verbose_name_plural = "Data DesKel"
         ordering = ['kabupaten', 'kecamatan', 'desa_kelurahan']
         unique_together = [['kabupaten', 'kecamatan', 'desa_kelurahan']]
 
@@ -247,7 +247,7 @@ class DapilKabKota(models.Model):
 
     class Meta:
         verbose_name = "Dapil Kab/Kota"
-        verbose_name_plural = "Data Dapil Kab/Kota"
+        verbose_name_plural = "Data Dapil Kokab"
         ordering = ['kabupaten', 'nama']
         unique_together = [['kabupaten', 'nama']]
 
@@ -357,7 +357,7 @@ class CalegRI(models.Model):
 
     class Meta:
         verbose_name = "Caleg DPR RI"
-        verbose_name_plural = "Data Caleg DPR RI"
+        verbose_name_plural = "Data Caleg RI"
         ordering = ['dapil', 'partai', 'nomor_urut']
         unique_together = [['dapil', 'partai', 'nomor_urut']]
 
@@ -412,7 +412,7 @@ class CalegProvinsi(models.Model):
 
     class Meta:
         verbose_name = "Caleg DPRD Provinsi"
-        verbose_name_plural = "Data Caleg DPRD Provinsi"
+        verbose_name_plural = "Data Caleg Provinsi"
         ordering = ['dapil', 'partai', 'nomor_urut']
         unique_together = [['dapil', 'partai', 'nomor_urut']]
 
@@ -467,7 +467,7 @@ class CalegKabKota(models.Model):
 
     class Meta:
         verbose_name = "Caleg DPRD Kab/Kota"
-        verbose_name_plural = "Data Caleg DPRD Kab/Kota"
+        verbose_name_plural = "Data Caleg Kokab"
         ordering = ['dapil', 'partai', 'nomor_urut']
         unique_together = [['dapil', 'partai', 'nomor_urut']]
 
