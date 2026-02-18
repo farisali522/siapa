@@ -19,6 +19,7 @@
             --white: #ffffff;
             --gray: #f8f9fa;
             --text-dark: #333333;
+            --nav-height: 70px;
         }
 
         body, html {
@@ -31,13 +32,57 @@
             overflow: hidden;
         }
 
+        /* Top Navbar */
+        .navbar {
+            height: var(--nav-height);
+            background: var(--white);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 2500;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-left: 10px;
+        }
+
+        .navbar-toggle {
+            background: var(--maroon);
+            color: var(--gold);
+            border: 2px solid var(--gold);
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s;
+        }
+
+        .navbar-toggle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(128, 0, 0, 0.2);
+        }
+
         .dashboard-container {
             display: flex;
-            height: 100vh;
+            height: calc(100vh - var(--nav-height));
+            margin-top: var(--nav-height);
             position: relative;
         }
 
-        /* Sidebar Light Mode */
+        /* Sidebar */
         .sidebar {
             width: 320px;
             background: var(--white);
@@ -46,30 +91,13 @@
             z-index: 2000;
             display: flex;
             flex-direction: column;
-            box-shadow: 5px 0 15px rgba(0,0,0,0.05);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
         }
 
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 40px;
-        }
-
-        .brand-logo {
-            width: 45px;
-            height: 45px;
-            background: var(--maroon);
-            border: 2px solid var(--gold);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 24px;
-            color: var(--gold);
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        /* Desktop Collapse */
+        .sidebar.collapsed {
+            margin-left: -320px;
         }
 
         .brand-text h1 {
@@ -122,26 +150,6 @@
             z-index: 1000;
         }
 
-        /* Mobile Toggle Button */
-        .mobile-toggle {
-            display: none;
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 3000;
-            background: var(--maroon);
-            color: var(--gold);
-            border: 2px solid var(--gold);
-            width: 45px;
-            height: 45px;
-            border-radius: 10px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            font-size: 20px;
-            align-items: center;
-            justify-content: center;
-        }
-
         /* Overlay for mobile */
         .sidebar-overlay {
             display: none;
@@ -157,17 +165,14 @@
 
         /* Responsive Breakpoint */
         @media (max-width: 768px) {
-            .mobile-toggle {
-                display: flex;
-            }
-
             .sidebar {
                 position: fixed;
-                left: -320px; /* Hidden start */
-                top: 0;
+                left: -320px;
+                top: var(--nav-height);
                 bottom: 0;
-                height: 100vh;
+                height: calc(100vh - var(--nav-height));
                 box-shadow: 15px 0 30px rgba(0,0,0,0.2);
+                margin-left: 0;
             }
 
             .sidebar.active {
@@ -178,8 +183,12 @@
                 display: block;
             }
 
-            #map {
-                width: 100vw;
+            .navbar-brand h1 {
+                font-size: 18px;
+            }
+            
+            .navbar-brand p {
+                display: none;
             }
         }
 
@@ -240,29 +249,27 @@
 </head>
 <body>
 
-<!-- Mobile Toggle Button -->
-<button class="mobile-toggle" onclick="toggleSidebar()">
-    <i class="fas fa-bars"></i>
-</button>
+<!-- Top Navbar -->
+<nav class="navbar">
+    <button class="navbar-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <div class="navbar-brand">
+        <div class="brand-logo" style="width: 35px; height: 35px; font-size: 18px; background: var(--maroon); border: 2px solid var(--gold); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--gold); font-weight: 700;">S</div>
+        <div class="brand-text">
+            <h1 style="font-size: 18px;">SIAPA <span style="font-weight: 300; font-size: 14px; color: #666; margin-left: 5px;">| Digital Map Analysis</span></h1>
+        </div>
+    </div>
+</nav>
 
 <!-- Mobile Overlay -->
 <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
 <div class="dashboard-container">
     <div class="sidebar" id="mainSidebar">
-        <!-- Close button for mobile -->
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 10px; display: none;" class="mobile-close">
-             <i class="fas fa-times" onclick="toggleSidebar()" style="cursor: pointer; font-size: 20px; color: var(--maroon);"></i>
-        </div>
-        <div class="brand">
-            <div class="brand-logo">S</div>
-            <div class="brand-text">
-                <h1>SIAPA</h1>
-                <p>Digital Map Analysis</p>
-            </div>
-        </div>
-
-        <div class="stats-card">
+        
+        <div class="stats-card" style="margin-top: 10px;">
             <h3>Wilayah Terdaftar</h3>
             <div class="value" id="count-wilayah">0</div>
         </div>
@@ -273,11 +280,12 @@
             <p style="font-size: 12px; color: #28a745; margin: 5px 0 0 0;">● Data Real-time</p>
         </div>
 
-        <div style="margin-top: 20px; font-size: 12px; color: #999;">
-            <p>Gerindra SIAPA - Sistem Informasi Administrasi & Pusat Analisis</p>
+        <div style="margin-top: auto; padding-bottom: 20px;">
+            <div style="font-size: 12px; color: #999; margin-bottom: 15px;">
+                <p>Gerindra SIAPA - Sistem Informasi Administrasi & Pusat Analisis</p>
+            </div>
+            <a href="/xxx/" class="btn-back" style="display: block;">Kembali ke Admin</a>
         </div>
-
-        <a href="/xxx/" class="btn-back">Kembali ke Admin</a>
     </div>
 
     <div id="map"></div>
@@ -346,12 +354,23 @@
     // Load data on start
     loadGeoData();
 
-    // Responsive Sidebar Toggle
+    // Responsive & Desktop Sidebar Toggle
     function toggleSidebar() {
         const sidebar = document.getElementById('mainSidebar');
         const overlay = document.querySelector('.sidebar-overlay');
-        sidebar.classList.toggle('active');
-        overlay.classList.toggle('active');
+        
+        if (window.innerWidth <= 768) {
+            // Mobile Mode
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        } else {
+            // Desktop Mode
+            sidebar.classList.toggle('collapsed');
+            // Give time for CSS transition before map resize
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 400);
+        }
     }
 
 </script>
