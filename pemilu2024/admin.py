@@ -122,18 +122,26 @@ class KabupatenKotaAdmin(ImportExportModelAdmin, PaslonAdminMixin):
             label.upper(), current, total, f"{percent:.0f}", f"{percent:.0f}", color
         )
 
-    def rekap_tps_dpt(self, obj):
-        """Dashboard TPS & DPT tingkat Kabupaten (Agregasi Kecamatan)"""
-        tps = obj.tps_pemilu_sum or 0
-        dpt = obj.dpt_pemilu_sum or 0
-        
-        # Grafik Progress (Gabungan/TPS saja sesuai request)
-        progress_tps = self.get_progress_bar(obj.filled_tps_count, obj.total_kec_count, "TPS/DPT")
-        
-        # Format numbers
-        tps_fmt = f"{tps:,}"
-        dpt_fmt = f"{dpt:,}"
+    # get_queryset dihapus agar tidak error MySQL Strict Mode
+    # def get_queryset(self, request): ...
 
+    def rekap_tps_dpt(self, obj):
+        """Dashboard TPS & DPT tingkat Kabupaten (Agregasi Manual)"""
+        # Hitung manual agar aman di VPS
+        data = obj.kecamatan_set.aggregate(
+            tps=Sum('rekap_tps_dpt_kecamatan__tps_pemilu'),
+            dpt=Sum('rekap_tps_dpt_kecamatan__dpt_pemilu')
+        )
+        tps = data['tps'] or 0
+        dpt = data['dpt'] or 0
+        
+        # Hitung progress
+        total_kec = obj.kecamatan_set.count()
+        filled_tps = obj.kecamatan_set.filter(rekap_tps_dpt_kecamatan__tps_pemilu__gt=0).count()
+
+        # Grafik Progress
+        progress_tps = self.get_progress_bar(filled_tps, total_kec, "TPS/DPT")
+        
         return format_html(
             '<div style="min-width: 160px; padding: 2px 0;">'
             '<div style="display: flex; gap: 5px; margin-bottom: 5px; white-space: nowrap;">'
@@ -142,22 +150,39 @@ class KabupatenKotaAdmin(ImportExportModelAdmin, PaslonAdminMixin):
             '</div>'
             '<div style="margin-top: 2px;">{}</div>'
             '</div>', 
-            tps_fmt, dpt_fmt, progress_tps
+            f"{tps:,}", f"{dpt:,}", progress_tps
         )
     rekap_tps_dpt.short_description = "Data TPS/DPT Kabupaten"
 
     def rekap_pilpres(self, obj):
-        """Dashboard Pilpres tingkat Kabupaten (Agregasi Kecamatan)"""
-        # Grafik Progress
-        progress_entry = self.get_progress_bar(obj.filled_pilpres_count, obj.total_kec_count, "ENTRY")
+        """Dashboard Pilpres tingkat Kabupaten (Agregasi Manual)"""
+        # Hitung manual agar aman di VPS
+        data = obj.kecamatan_set.aggregate(
+            s1=Sum('rekap_suara_pilpres_kecamatan__suara_paslon_1'),
+            s2=Sum('rekap_suara_pilpres_kecamatan__suara_paslon_2'),
+            s3=Sum('rekap_suara_pilpres_kecamatan__suara_paslon_3'),
+            st=Sum('rekap_suara_pilpres_kecamatan__suara_tidak_sah')
+        )
 
-        s1 = obj.p1_sum or 0
-        s2 = obj.p2_sum or 0
-        s3 = obj.p3_sum or 0
-        st = obj.tidak_sah_sum or 0
+        s1 = data['s1'] or 0
+        s2 = data['s2'] or 0
+        s3 = data['s3'] or 0
+        st = data['st'] or 0
         
         total_sah = s1 + s2 + s3
         total_masuk = total_sah + st
+
+        # Hitung progress
+        total_kec = obj.kecamatan_set.count()
+        # Perbaikan: Tidak bisa query ke @property, pakai Q object manual
+        filled_pilpres = obj.kecamatan_set.filter(
+            Q(rekap_suara_pilpres_kecamatan__suara_paslon_1__gt=0) |
+            Q(rekap_suara_pilpres_kecamatan__suara_paslon_2__gt=0) |
+            Q(rekap_suara_pilpres_kecamatan__suara_paslon_3__gt=0) |
+            Q(rekap_suara_pilpres_kecamatan__suara_tidak_sah__gt=0)
+        ).distinct().count()
+
+        progress_entry = self.get_progress_bar(filled_pilpres, total_kec, "ENTRY")
         
         if total_masuk == 0:
             return format_html(
@@ -174,15 +199,13 @@ class KabupatenKotaAdmin(ImportExportModelAdmin, PaslonAdminMixin):
         p3_pct = (s3 / total_sah * 100) if total_sah > 0 else 0
 
         def get_badge(no, suara, persen, color):
-            # Pre-format number
-            suara_fmt = f"{suara:,}"
             return format_html(
                 '<div style="display: flex; align-items: center; gap: 5px; margin-bottom: 2px; white-space: nowrap;">'
                 '<span style="background: {}; color: white; min-width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center; border-radius: 3px; font-size: 8px; font-weight: bold;">{}</span>'
                 '<span style="font-weight: bold; color: #333; font-size: 11px;">{}</span>'
                 '<small style="color: #666; font-size: 9px;">({:.0f}%)</small>'
                 '</div>',
-                color, no, suara_fmt, persen
+                color, no, f"{suara:,}", persen
             )
 
         rows = format_html('<div style="flex: 1;">{}{}{}</div>', 
@@ -190,18 +213,13 @@ class KabupatenKotaAdmin(ImportExportModelAdmin, PaslonAdminMixin):
                            get_badge("2", s2, p2_pct, "#007bff"),
                            get_badge("3", s3, p3_pct, "#dc3545"))
 
-        # Pre-format stats
-        sah_fmt = f"{total_sah:,}"
-        st_fmt = f"{st:,}"
-        total_fmt = f"{total_masuk:,}"
-
         stats = format_html(
             '<div style="border-left: 1px solid #ddd; padding-left: 10px; margin-left: 10px; display: flex; flex-direction: column; justify-content: center; gap: 3px;">'
             '<div style="font-size: 10px; color: #333; white-space: nowrap;">SAH: <strong>{}</strong></div>'
             '<div style="font-size: 10px; color: #666; white-space: nowrap;">T.SAH: {}</div>'
             '<div style="font-size: 10px; color: #000; white-space: nowrap; border-top: 1px solid #eee; padding-top: 2px;">TOTAL: <strong>{}</strong></div>'
             '</div>',
-            sah_fmt, st_fmt, total_fmt
+            f"{total_sah:,}", f"{st:,}", f"{total_masuk:,}"
         )
 
         return format_html(
@@ -212,20 +230,6 @@ class KabupatenKotaAdmin(ImportExportModelAdmin, PaslonAdminMixin):
             rows, stats, progress_entry
         )
     rekap_pilpres.short_description = "Data Pilpres Kabupaten"
-
-    def get_queryset(self, request):
-        return super().get_queryset(request).annotate(
-            total_kec_count=Count('kecamatan_set', distinct=True),
-            filled_tps_count=Count('kecamatan_set__rekap_tps_dpt_kecamatan', filter=Q(kecamatan_set__rekap_tps_dpt_kecamatan__tps_pemilu__gt=0), distinct=True),
-            filled_dpt_count=Count('kecamatan_set__rekap_tps_dpt_kecamatan', filter=Q(kecamatan_set__rekap_tps_dpt_kecamatan__dpt_pemilu__gt=0), distinct=True),
-            filled_pilpres_count=Count('kecamatan_set__rekap_suara_pilpres_kecamatan', distinct=True),
-            tps_pemilu_sum=Sum('kecamatan_set__rekap_tps_dpt_kecamatan__tps_pemilu'),
-            dpt_pemilu_sum=Sum('kecamatan_set__rekap_tps_dpt_kecamatan__dpt_pemilu'),
-            p1_sum=Sum('kecamatan_set__rekap_suara_pilpres_kecamatan__suara_paslon_1'),
-            p2_sum=Sum('kecamatan_set__rekap_suara_pilpres_kecamatan__suara_paslon_2'),
-            p3_sum=Sum('kecamatan_set__rekap_suara_pilpres_kecamatan__suara_paslon_3'),
-            tidak_sah_sum=Sum('kecamatan_set__rekap_suara_pilpres_kecamatan__suara_tidak_sah'),
-        )
 
 # --- 1.2 KECAMATAN ---
 class KecamatanResource(resources.ModelResource):
@@ -313,17 +317,17 @@ class SuaraPilpresKecamatanInline(admin.StackedInline):
     readonly_fields = ['total_suara_sah_display', 'total_suara_masuk_display']
 
 @admin.register(Kecamatan)
-class KecamatanAdmin(ImportExportModelAdmin, PaslonAdminMixin):
+class KecamatanAdmin(admin.ModelAdmin, PaslonAdminMixin):
     inlines = [RekapTPSDPTKecamatanInline, SuaraPilpresKecamatanInline, GeoKecamatanInline]
     
     list_display = ['info_kecamatan', 'rekap_tps_dpt', 'rekap_pilpres', 'progress_data_desa', 'lihat_desa']
     list_per_page = 10
     list_display_links = ['info_kecamatan']
-    list_filter = ['kabupaten_kota']
+    list_filter = [('kabupaten_kota', admin.RelatedOnlyFieldListFilter)]
 
     search_fields = ['nama', 'kabupaten_kota__nama']
     ordering = ['kabupaten_kota', 'nama']
-    formats = [XLSX]
+    # formats = [XLSX]
 
     def lihat_desa(self, obj):
         """Link untuk melihat daftar desa yang difilter berdasarkan kecamatan ini"""
