@@ -3,69 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIAPA</title>
+    <title>SIAPA - Sistem Informasi Administrasi & Pusat Analisis</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         :root {
-            --primary-color: #800000;
-            --secondary-color: #ffd700;
+            --maroon: #800000;
+            --gold: #D4AF37;
+            --dark: #121212;
+            --white: #ffffff;
+            --gray-light: #f8f9fa;
         }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+        * {
             margin: 0;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--white);
+            color: var(--dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Hero Section */
+        .hero {
             height: 100vh;
-        }
-        .login-card {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
-            max-width: 400px;
-            width: 90%;
-            border-top: 5px solid var(--primary-color);
+            background: linear-gradient(135deg, rgba(128, 0, 0, 0.95) 0%, rgba(20, 20, 20, 0.9) 100%), 
+                        url('/static/images/siapa_landing_hero_bg.png');
+            background-size: cover;
+            background-position: center;
+            color: var(--white);
+            padding: 0 20px;
+            position: relative;
         }
-        h1 {
-            color: var(--primary-color);
-            margin-bottom: 10px;
-            font-size: 2.5rem;
+
+        .hero-content {
+            max-width: 800px;
+            z-index: 2;
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--gold);
+            color: var(--maroon);
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
             letter-spacing: 2px;
+            animation: fadeInDown 0.8s ease-out;
         }
-        p {
-            color: #666;
-            margin-bottom: 30px;
+
+        .hero h1 {
+            font-size: clamp(48px, 8vw, 100px);
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: fadeInUp 1s ease-out;
         }
-        .btn {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 12px 30px;
+
+        .hero h1 span {
+            color: var(--gold);
+        }
+
+        .hero p {
+            font-size: clamp(16px, 2vw, 20px);
+            margin-bottom: 40px;
+            opacity: 0.9;
+            font-weight: 300;
+            animation: fadeInUp 1.2s ease-out;
+        }
+
+        /* Secret Link - ONLY FOR THOSE WHO KNOW */
+        .secret-access {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            opacity: 0.05;
+            transition: opacity 0.3s;
+            cursor: default;
+        }
+        
+        .secret-access:hover {
+            opacity: 0.5;
+        }
+        
+        .secret-link {
             text-decoration: none;
-            border-radius: 6px;
-            font-weight: bold;
+            color: var(--white);
+            font-size: 10px;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 100px 20px;
+            background: var(--gray-light);
+            text-align: center;
+        }
+
+        .section-title {
+            margin-bottom: 60px;
+        }
+
+        .section-title h2 {
+            font-size: 36px;
+            color: var(--maroon);
+            font-weight: 700;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--white);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .card i {
+            font-size: 40px;
+            color: var(--gold);
+            margin-bottom: 20px;
             display: block;
-            transition: background 0.3s;
         }
-        .btn:hover {
-            background-color: #a52a2a;
+
+        .card h3 {
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: var(--maroon);
         }
-        .footer {
-            margin-top: 20px;
-            font-size: 0.8rem;
-            color: #999;
+
+        .card p {
+            font-size: 15px;
+            color: #666;
         }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        footer {
+            background: var(--maroon);
+            color: var(--white);
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        footer p {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* Hidden Login Strategy */
+        .contact-btn {
+            background: var(--gold);
+            color: var(--maroon);
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-block;
+            transition: all 0.3s;
+            border: 2px solid var(--gold);
+        }
+
+        .contact-btn:hover {
+            background: transparent;
+            color: var(--gold);
+            transform: scale(1.05);
+        }
+
     </style>
 </head>
 <body>
-    <div class="login-card">
-        <h1>SIAPA</h1>
-        <p>Sistem Informasi Administrasi & Pusat Analisis</p>
-        <a href="/admin/" class="btn">MASUK KE DASHBOARD</a>
-        <div class="footer">
-            &copy; 2026 Sistem Informasi Administrasi & Pusat Analisis
+
+    <section class="hero">
+        <div class="hero-content">
+            <span class="badge">Sistem Informasi Pilkada & Pemilu</span>
+            <h1>SI<span>APA</span></h1>
+            <p>Sistem Informasi Administrasi & Pusat Analisis Digital.<br>Transformasi data menjadi strategi kemenangan yang terukur dan presisi.</p>
+            <a href="mailto:info@tigasebelas.com" class="contact-btn">HUBUNGI KAMI</a>
         </div>
+    </section>
+
+    <section class="features">
+        <div class="section-title">
+            <h2>Layanan Utama</h2>
+        </div>
+        <div class="grid">
+            <div class="card">
+                <i class="fa-solid fa-map-location-dot"></i>
+                <h3>Pemetaan Digital</h3>
+                <p>Visualisasi sebaran dukungan dan batas administratif wilayah secara real-time dan interaktif.</p>
+            </div>
+            <div class="card">
+                <i class="fa-solid fa-chart-line"></i>
+                <h3>Analisis Strategis</h3>
+                <p>Pengolahan data hasil rekapitulasi untuk menentukan langkah taktis di setiap tingkatan wilayah.</p>
+            </div>
+            <div class="card">
+                <i class="fa-solid fa-users-gear"></i>
+                <h3>Manajemen Kader</h3>
+                <p>Pengelolaan database kader dan relawan dari tingkat kabupaten hingga tingkat TPS.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div style="margin-bottom: 20px;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Logo_Gerindra.svg/1200px-Logo_Gerindra.svg.png" alt="Gerindra" style="height: 50px; filter: brightness(0) invert(1);">
+        </div>
+        <p>&copy; 2026 SIAPA System. Hak Cipta Dilindungi Undang-Undang.</p>
+    </footer>
+
+    <!-- GAK ADA YANG TAHU KALAU KLIK TITIK KECIL INI BISA KE LOGIN -->
+    <div class="secret-access">
+        <a href="/xxx/" class="secret-link">.</a>
     </div>
+
 </body>
 </html>
