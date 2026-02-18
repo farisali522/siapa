@@ -190,6 +190,13 @@
         }
 
         /* Hidden Login Strategy */
+        .hero-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap; /* Allow wrapping on very small screens */
+        }
+
         .contact-btn {
             background: var(--gold);
             color: var(--maroon);
@@ -197,15 +204,43 @@
             border-radius: 50px;
             text-decoration: none;
             font-weight: 700;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.3s;
             border: 2px solid var(--gold);
+            white-space: nowrap; /* Prevent text wrapping inside button */
+        }
+
+        .contact-btn.btn-outline {
+            background: transparent;
+            color: var(--gold);
         }
 
         .contact-btn:hover {
-            background: transparent;
-            color: var(--gold);
+            background: var(--white);
+            border-color: var(--white);
+            color: var(--maroon);
             transform: scale(1.05);
+        }
+        
+        .contact-btn.btn-outline:hover {
+            background: var(--gold);
+            border-color: var(--gold);
+            color: var(--maroon);
+        }
+
+        @media (max-width: 480px) {
+            .hero-actions {
+                flex-direction: column; /* Stack vertically on small phones */
+                gap: 10px;
+                padding: 0 20px;
+            }
+            .contact-btn {
+                width: 100%; /* Full width buttons on mobile */
+                padding: 12px 20px; /* Slightly smaller padding */
+                font-size: 14px;
+            }
         }
 
     </style>
@@ -216,8 +251,10 @@
         <div class="hero-content">
             <h1>SI<span>APA</span></h1>
             <p>Sistem Informasi Administrasi & Pusat Analisis Digital.</p>
-            <a href="mailto:info@tigasebelas.com" class="contact-btn">HUBUNGI KAMI</a>
-            <a href="{% url 'custom_login' %}" class="contact-btn" style="background: transparent; color: var(--gold); border: 2px solid var(--gold); margin-left: 10px;">LOGIN MASUK</a>
+            <div class="hero-actions">
+                <a href="mailto:info@tigasebelas.com" class="contact-btn">HUBUNGI KAMI</a>
+                <a href="{% url 'custom_login' %}" class="contact-btn btn-outline">LOGIN MASUK</a>
+            </div>
         </div>
     </section>
     <div class="secret-access">
