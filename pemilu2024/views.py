@@ -1,14 +1,17 @@
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
 from .models import Kecamatan, KelurahanDesa, GeoKokab
 
 def landing(request):
     return render(request, 'landing.html')
 
+@login_required
 def dashboard_peta(request):
     """Halaman Dashboard Utama untuk menampilkan peta seluruh wilayah"""
     return render(request, 'dashboard_map.html')
 
+@login_required
 def get_geo_data(request):
     """API untuk mengambil semua data GeoJSON Kabupaten/Kota"""
     geodata = GeoKokab.objects.select_related('kokab').all()
