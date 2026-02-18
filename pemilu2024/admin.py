@@ -405,10 +405,29 @@ class KecamatanAdmin(admin.ModelAdmin, PaslonAdminMixin):
     rekap_tps_dpt.short_description = "Data TPS/DPT Kecamatan"
 
     def progress_data_desa(self, obj):
-        """Kolom Terpisah: Menggabungkan semua progres data dari tingkat desa"""
-        p_tps = self.get_progress_bar(obj.filled_tps_count, obj.total_desa_count, "TPS")
-        p_dpt = self.get_progress_bar(obj.filled_dpt_count, obj.total_desa_count, "DPT")
-        p_entry = self.get_progress_bar(obj.filled_pilpres_count, obj.total_desa_count, "ENTRY")
+        """Kolom Terpisah: Menggabungkan semua progres data dari tingkat desa (Agregasi Manual)"""
+        # Hitung manual agar aman dari error MySQL Group By
+        total_desa = obj.kelurahandesa_set.count()
+        
+        filled_tps = obj.kelurahandesa_set.filter(
+            rekap_tps_dpt__tps_pemilu__gt=0
+        ).count()
+        
+        filled_dpt = obj.kelurahandesa_set.filter(
+            rekap_tps_dpt__dpt_pemilu__gt=0
+        ).count()
+
+        # Gunakan Q object untuk menghindari error @property lookup
+        filled_entry = obj.kelurahandesa_set.filter(
+            Q(rekap_suara_pilpres__suara_paslon_1__gt=0) |
+            Q(rekap_suara_pilpres__suara_paslon_2__gt=0) |
+            Q(rekap_suara_pilpres__suara_paslon_3__gt=0) |
+            Q(rekap_suara_pilpres__suara_tidak_sah__gt=0)
+        ).distinct().count()
+
+        p_tps = self.get_progress_bar(filled_tps, total_desa, "TPS")
+        p_dpt = self.get_progress_bar(filled_dpt, total_desa, "DPT")
+        p_entry = self.get_progress_bar(filled_entry, total_desa, "ENTRY")
         
         return format_html(
             '<div style="min-width: 180px; padding: 2px 0;">'
@@ -486,23 +505,9 @@ class KecamatanAdmin(admin.ModelAdmin, PaslonAdminMixin):
     def has_delete_permission(self, request, obj=None):
         """Mencegah penghapusan data Kecamatan agar rekapitulasi tetap aman"""
         return False
-
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related('kabupaten_kota').prefetch_related(
-            'rekap_tps_dpt_kecamatan', 
-            'rekap_suara_pilpres_kecamatan'
-        ).annotate(
-            total_desa_count=Count('kelurahandesa', distinct=True),
-            filled_tps_count=Count('kelurahandesa__rekap_tps_dpt', filter=Q(kelurahandesa__rekap_tps_dpt__tps_pemilu__gt=0), distinct=True),
-            filled_dpt_count=Count('kelurahandesa__rekap_tps_dpt', filter=Q(kelurahandesa__rekap_tps_dpt__dpt_pemilu__gt=0), distinct=True),
-            filled_pilpres_count=Count('kelurahandesa__rekap_suara_pilpres', distinct=True),
-            tps_pemilu_sum=Sum('kelurahandesa__rekap_tps_dpt__tps_pemilu'),
-            dpt_pemilu_sum=Sum('kelurahandesa__rekap_tps_dpt__dpt_pemilu'),
-            p1_sum=Sum('kelurahandesa__rekap_suara_pilpres__suara_paslon_1'),
-            p2_sum=Sum('kelurahandesa__rekap_suara_pilpres__suara_paslon_2'),
-            p3_sum=Sum('kelurahandesa__rekap_suara_pilpres__suara_paslon_3'),
-            tidak_sah_sum=Sum('kelurahandesa__rekap_suara_pilpres__suara_tidak_sah'),
-        )
+    
+    # get_queryset DIHAPUS karena menyebabkan error 500 di MySQL Strict Mode
+    # def get_queryset(self, request): ...
 
 # --- 1.3 KELURAHAN/DESA DEPENDENCIES (FORMS & INLINES) ---
 class SmartKecamatanWidget(widgets.ForeignKeyWidget):
