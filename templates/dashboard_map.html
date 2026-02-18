@@ -127,9 +127,11 @@
         /* --- MAIN LAYOUT --- */
         .main-wrapper {
             display: flex;
-            height: 100vh;
-            width: 100%;
-            padding-top: var(--nav-height);
+            height: calc(100vh - var(--nav-height));
+            width: 100vw;
+            margin-top: var(--nav-height);
+            background: #eef;
+            overflow: hidden;
         }
 
         /* --- SIDEBAR --- */
@@ -152,6 +154,10 @@
             margin-left: calc(-1 * var(--sidebar-width));
             opacity: 0;
             visibility: hidden;
+            min-width: 0;
+            width: 0;
+            padding: 0;
+            border: none;
         }
 
         .stats-group {
@@ -366,27 +372,30 @@
 
     var map = L.map('map', {
         zoomControl: true,
-        attributionControl: false
+        attributionControl: false,
+        fadeAnimation: true,
+        zoomAnimation: true
     }).setView([-6.9175, 107.6191], 9);
 
-    // KEMBALI KE PETA BIASA (OpenStreetMap Standard)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19
     }).addTo(map);
 
-    // Fix Peta "Rusak" / Berantakan saat awal load
-    setTimeout(() => {
-        map.invalidateSize();
-    }, 200);
+    // --- SOLUSI PATEN MAP RUSAK (ResizeObserver) ---
+    // Ini akan mendeteksi SETIAP perubahan ukuran pada kontainer peta
+    // baik karena sidebar digeser, HP diputar, atau loading awal.
+    const mapContainer = document.getElementById('map');
+    const resizeObserver = new ResizeObserver(() => {
+        map.invalidateSize({ animate: true });
+    });
+    resizeObserver.observe(mapContainer);
 
-    // Function to load GeoJSON data from our API
     function loadGeoData() {
         fetch('/get_geo_data/')
             .then(response => response.json())
             .then(data => {
                 if (data.features.length > 0) {
                     document.getElementById('count-wilayah').innerText = data.features.length;
-
                     var geoLayer = L.geoJSON(data, {
                         style: function(feature) {
                             return {
@@ -421,7 +430,6 @@
 
                     // Fit bounds dan pastikan ukuran peta sinkron
                     map.fitBounds(geoLayer.getBounds(), { padding: [50, 50] });
-                    setTimeout(() => map.invalidateSize(), 500);
                 }
             })
             .catch(error => console.error('Error fetching GeoJSON:', error));
@@ -430,11 +438,6 @@
     // Load data after window fully loaded
     window.addEventListener('load', loadGeoData);
     
-    // Fix peta saat browser di-resize manual
-    window.addEventListener('resize', () => {
-        map.invalidateSize();
-    });
-
     // Responsive & Desktop Sidebar Toggle with Persistence
     function toggleSidebar() {
         const sidebar = document.getElementById('mainSidebar');
@@ -449,11 +452,7 @@
             sidebar.classList.toggle('collapsed');
             const isCollapsed = sidebar.classList.contains('collapsed');
             localStorage.setItem('sidebarCollapsed', isCollapsed);
-            
-            // Re-sinkronisasi peta setelah transisi sidebar selesai
-            setTimeout(() => {
-                map.invalidateSize();
-            }, 450);
+            // invalidateSize akan dipanggil otomatis oleh ResizeObserver di atas
         }
     }
 
