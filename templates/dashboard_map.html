@@ -374,6 +374,11 @@
         maxZoom: 19
     }).addTo(map);
 
+    // Fix Peta "Rusak" / Berantakan saat awal load
+    setTimeout(() => {
+        map.invalidateSize();
+    }, 200);
+
     // Function to load GeoJSON data from our API
     function loadGeoData() {
         fetch('/get_geo_data/')
@@ -414,15 +419,21 @@
                         }
                     }).addTo(map);
 
-                    // Fit bounds to all territories
+                    // Fit bounds dan pastikan ukuran peta sinkron
                     map.fitBounds(geoLayer.getBounds(), { padding: [50, 50] });
+                    setTimeout(() => map.invalidateSize(), 500);
                 }
             })
             .catch(error => console.error('Error fetching GeoJSON:', error));
     }
 
-    // Load data on start
-    loadGeoData();
+    // Load data after window fully loaded
+    window.addEventListener('load', loadGeoData);
+    
+    // Fix peta saat browser di-resize manual
+    window.addEventListener('resize', () => {
+        map.invalidateSize();
+    });
 
     // Responsive & Desktop Sidebar Toggle with Persistence
     function toggleSidebar() {
@@ -439,10 +450,10 @@
             const isCollapsed = sidebar.classList.contains('collapsed');
             localStorage.setItem('sidebarCollapsed', isCollapsed);
             
-            // Give time for CSS transition before map resize
+            // Re-sinkronisasi peta setelah transisi sidebar selesai
             setTimeout(() => {
                 map.invalidateSize();
-            }, 400);
+            }, 450);
         }
     }
 
