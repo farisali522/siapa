@@ -11,6 +11,9 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         :root {
             --maroon: #800000;
@@ -24,6 +27,9 @@
             --sidebar-width: 320px;
             --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        /* Prevent flash of expanded sidebar if it was collapsed */
+        .sidebar-ready #mainSidebar { transition: none !important; }
 
         * {
             box-sizing: border-box;
@@ -67,7 +73,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 20px;
             transition: var(--transition);
             flex-shrink: 0;
         }
@@ -289,7 +295,7 @@
         }
     </style>
 </head>
-<body>
+<body class="sidebar-ready">
 
 <!-- Top Navbar -->
 <nav class="navbar">
@@ -330,7 +336,7 @@
         </div>
 
         <div class="sidebar-footer">
-            <div style="font-size: 11px; color: #bbb; margin-bottom: 20px; line-height: 1.5;">
+            <div style="font-size: 11px; color: #999; margin-bottom: 20px; line-height: 1.5;">
                 <strong>Gerindra SIAPA v2.0</strong><br>
                 Sistem Analisis Strategi Digital
             </div>
@@ -345,6 +351,19 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+    // Initialize Sidebar State from LocalStorage
+    (function initSidebar() {
+        const sidebar = document.getElementById('mainSidebar');
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (isCollapsed && window.innerWidth > 768) {
+            sidebar.classList.add('collapsed');
+        }
+        // Remove the transition-blocker class after a short delay
+        setTimeout(() => {
+            document.body.classList.remove('sidebar-ready');
+        }, 100);
+    })();
+
     var map = L.map('map', {
         zoomControl: true,
         attributionControl: false
@@ -376,9 +395,9 @@
                         onEachFeature: function(feature, layer) {
                             var popupContent = `
                                 <div class="popup-header">
-                                    <h2>${feature.properties.nama}</h2>
+                                    <h2 style="margin:0; font-size:16px; color:#800000;">${feature.properties.nama}</h2>
                                 </div>
-                                <div style="font-size: 12px; color: #333;">
+                                <div style="font-size: 12px; color: #333; margin-top:8px;">
                                     <p style="margin: 5px 0;">Status: <span style="color: #28a745; font-weight: bold;">Terpetakan</span></p>
                                     <p style="margin: 5px 0 0 0; color: #666;">Klik wilayah untuk detail rekapitulasi</p>
                                 </div>
@@ -405,7 +424,7 @@
     // Load data on start
     loadGeoData();
 
-    // Responsive & Desktop Sidebar Toggle
+    // Responsive & Desktop Sidebar Toggle with Persistence
     function toggleSidebar() {
         const sidebar = document.getElementById('mainSidebar');
         const overlay = document.querySelector('.sidebar-overlay');
@@ -417,6 +436,9 @@
         } else {
             // Desktop Mode
             sidebar.classList.toggle('collapsed');
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+            
             // Give time for CSS transition before map resize
             setTimeout(() => {
                 map.invalidateSize();
