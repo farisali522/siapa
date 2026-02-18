@@ -128,10 +128,11 @@
         .main-wrapper {
             display: flex;
             height: calc(100vh - var(--nav-height));
-            width: 100vw;
+            width: 100%;
             margin-top: var(--nav-height);
             background: #eef;
             overflow: hidden;
+            position: relative;
         }
 
         /* --- SIDEBAR --- */
@@ -364,6 +365,10 @@
     <!-- Map Container -->
     <div class="map-view-container">
         <div id="map"></div>
+        <div class="map-loader" id="mapLoader">
+            <div class="loader-spinner"></div>
+            <p style="margin-top: 20px; font-weight: 600; color: var(--maroon);">Menyiapkan Peta Digital...</p>
+        </div>
     </div>
 </div>
 
@@ -378,40 +383,44 @@
             sidebar.classList.add('collapsed');
         }
         // Remove the transition-blocker class after a short delay
-        setTimeout(() => {
-            document.body.classList.remove('sidebar-ready');
-        }, 100);
     })();
 
-    var map = L.map('map', {
-        zoomControl: true,
-        attributionControl: false,
-        fadeAnimation: true,
-        zoomAnimation: true,
-        trackResize: true
-    }).setView([-6.9175, 107.6191], 9);
+    function initMap() {
+        map = L.map('map', {
+            zoomControl: true,
+            attributionControl: false,
+            fadeAnimation: true,
+            zoomAnimation: true,
+            trackResize: false // Kita handle manual via ResizeObserver
+        }).setView([-6.9175, 107.6191], 9);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19
-    }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19
+        }).addTo(map);
 
-    // --- SOLUSI ANTI-RUSAK (MULTI-STAGE FIX) ---
-    // 1. Invalidate saat ready
-    map.whenReady(() => {
-        setTimeout(() => map.invalidateSize(), 100);
-    });
+        // Observer untuk perubahan ukuran container (Solusi Paten)
+        const mapContainer = document.getElementById('map');
+        const resizeObserver = new ResizeObserver(() => {
+            if (map) {
+                map.invalidateSize();
+            }
+        });
+        resizeObserver.observe(mapContainer);
 
-    // 2. Invalidate paksa setelah loading awal selesai
-    window.addEventListener('load', () => {
-        setTimeout(() => map.invalidateSize(), 500);
-    });
-
-    // 3. ResizeObserver tetap dipasang untuk sidebar/zoom
-    const mapContainer = document.getElementById('map');
-    const resizeObserver = new ResizeObserver(() => {
-        map.invalidateSize();
-    });
-    resizeObserver.observe(mapContainer);
+        // Load data setalah map siap
+        map.whenReady(() => {
+            loadGeoData();
+            // Invalidate paksa sekali lagi setelah 300ms
+            setTimeout(() => {
+                map.invalidateSize();
+                document.getElementById('mapLoader').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('mapLoader').style.display = 'none';
+                    document.body.classList.remove('sidebar-ready');
+                }, 500);
+            }, 600);
+        });
+    }
 
     function loadGeoData() {
         fetch('/get_geo_data/')
@@ -440,42 +449,32 @@
                                 </div>
                             `;
                             layer.bindPopup(popupContent);
-                            
-                            // Hover effect
-                            layer.on('mouseover', function() {
-                                this.setStyle({ fillOpacity: 0.6, weight: 3 });
-                            });
-                            layer.on('mouseout', function() {
-                                this.setStyle({ fillOpacity: 0.3, weight: 2 });
-                            });
+                            layer.on('mouseover', function() { this.setStyle({ fillOpacity: 0.6, weight: 3 }); });
+                            layer.on('mouseout', function() { this.setStyle({ fillOpacity: 0.3, weight: 2 }); });
                         }
                     }).addTo(map);
-
-                    // Fit bounds dan pastikan ukuran peta sinkron
+                    
                     map.fitBounds(geoLayer.getBounds(), { padding: [50, 50] });
                 }
             })
             .catch(error => console.error('Error fetching GeoJSON:', error));
     }
 
-    // Panggil load data
-    loadGeoData();
-    
-    // Responsive & Desktop Sidebar Toggle with Persistence
+    // Start everything on DOM Ready
+    document.addEventListener('DOMContentLoaded', initMap);
+
+    // Responsive & Desktop Sidebar Toggle
     function toggleSidebar() {
         const sidebar = document.getElementById('mainSidebar');
         const overlay = document.querySelector('.sidebar-overlay');
         
         if (window.innerWidth <= 768) {
-            // Mobile Mode
             sidebar.classList.toggle('active');
             overlay.classList.toggle('active');
         } else {
-            // Desktop Mode
             sidebar.classList.toggle('collapsed');
-            const isCollapsed = sidebar.classList.contains('collapsed');
-            localStorage.setItem('sidebarCollapsed', isCollapsed);
-            // ResizeObserver akan menangani sisanya
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            // invalidateSize akan dihandle ResizeObserver saat lebar container berubah
         }
     }
 
