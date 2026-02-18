@@ -34,6 +34,7 @@
         .dashboard-container {
             display: flex;
             height: 100vh;
+            position: relative;
         }
 
         /* Sidebar Light Mode */
@@ -42,10 +43,11 @@
             background: var(--white);
             border-right: 1px solid rgba(0, 0, 0, 0.1);
             padding: 30px;
-            z-index: 1000;
+            z-index: 2000;
             display: flex;
             flex-direction: column;
             box-shadow: 5px 0 15px rgba(0,0,0,0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .brand {
@@ -117,6 +119,68 @@
             flex-grow: 1;
             height: 100%;
             background: #eef;
+            z-index: 1000;
+        }
+
+        /* Mobile Toggle Button */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 3000;
+            background: var(--maroon);
+            color: var(--gold);
+            border: 2px solid var(--gold);
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            font-size: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Overlay for mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1500;
+            backdrop-filter: blur(3px);
+        }
+
+        /* Responsive Breakpoint */
+        @media (max-width: 768px) {
+            .mobile-toggle {
+                display: flex;
+            }
+
+            .sidebar {
+                position: fixed;
+                left: -320px; /* Hidden start */
+                top: 0;
+                bottom: 0;
+                height: 100vh;
+                box-shadow: 15px 0 30px rgba(0,0,0,0.2);
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            #map {
+                width: 100vw;
+            }
         }
 
         /* Leaflet Overrides */
@@ -176,8 +240,20 @@
 </head>
 <body>
 
+<!-- Mobile Toggle Button -->
+<button class="mobile-toggle" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Mobile Overlay -->
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
 <div class="dashboard-container">
-    <div class="sidebar">
+    <div class="sidebar" id="mainSidebar">
+        <!-- Close button for mobile -->
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 10px; display: none;" class="mobile-close">
+             <i class="fas fa-times" onclick="toggleSidebar()" style="cursor: pointer; font-size: 20px; color: var(--maroon);"></i>
+        </div>
         <div class="brand">
             <div class="brand-logo">S</div>
             <div class="brand-text">
@@ -269,6 +345,14 @@
 
     // Load data on start
     loadGeoData();
+
+    // Responsive Sidebar Toggle
+    function toggleSidebar() {
+        const sidebar = document.getElementById('mainSidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+    }
 
 </script>
 
