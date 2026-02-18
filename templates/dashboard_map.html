@@ -46,6 +46,30 @@
             overflow: hidden;
         }
 
+        .global-footer {
+            height: var(--footer-height);
+            background: var(--white);
+            border-top: 1px solid var(--border);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            font-size: 8px;
+            color: #bbb;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .global-footer { font-size: 7px; letter-spacing: 0.2px; }
+        }
+
         /* --- NAVBAR --- */
         .navbar {
             height: var(--nav-height);
@@ -427,7 +451,7 @@
 
 <!-- Thin Global Footer -->
 <footer class="global-footer">
-    &copy; 2026 Gerindra SIAPA - Sistem Informasi Administrasi & Pusat Analisis Digital. Hak Cipta Dilindungi Undang-Undang.
+    SIAPA &mdash; Sistem Informasi Administrasi & Pusat Analisis
 </footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
