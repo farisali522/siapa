@@ -161,13 +161,15 @@ class KabupatenKotaAdmin(ImportExportModelAdmin, PaslonAdminMixin):
             s1=Sum('rekap_suara_pilpres_kecamatan__suara_paslon_1'),
             s2=Sum('rekap_suara_pilpres_kecamatan__suara_paslon_2'),
             s3=Sum('rekap_suara_pilpres_kecamatan__suara_paslon_3'),
-            st=Sum('rekap_suara_pilpres_kecamatan__suara_tidak_sah')
+            st=Sum('rekap_suara_pilpres_kecamatan__suara_tidak_sah'),
+            dpt_total=Sum('rekap_tps_dpt_kecamatan__dpt_pemilu') # Tambah DPT
         )
 
         s1 = data['s1'] or 0
         s2 = data['s2'] or 0
         s3 = data['s3'] or 0
         st = data['st'] or 0
+        dpt = data['dpt_total'] or 0 # Ambil DPT
         
         total_sah = s1 + s2 + s3
         total_masuk = total_sah + st
@@ -198,14 +200,25 @@ class KabupatenKotaAdmin(ImportExportModelAdmin, PaslonAdminMixin):
         p2_pct = (s2 / total_sah * 100) if total_sah > 0 else 0
         p3_pct = (s3 / total_sah * 100) if total_sah > 0 else 0
 
+        # Hitung Persentase Statistik
+        sah_pct = (total_sah / total_masuk * 100) if total_masuk > 0 else 0
+        tsah_pct = (st / total_masuk * 100) if total_masuk > 0 else 0
+        partisipasi_pct = (total_masuk / dpt * 100) if dpt > 0 else 0
+        
+        # Format string
+        sah_pct_str = f"{sah_pct:.0f}%"
+        tsah_pct_str = f"{tsah_pct:.0f}%"
+        partisipasi_pct_str = f"{partisipasi_pct:.1f}%"
+
         def get_badge(no, suara, persen, color):
+            persen_fmt = f"{persen:.0f}"
             return format_html(
-                '<div style="display: flex; align-items: center; gap: 5px; margin-bottom: 2px; white-space: nowrap;">'
-                '<span style="background: {}; color: white; min-width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center; border-radius: 3px; font-size: 8px; font-weight: bold;">{}</span>'
-                '<span style="font-weight: bold; color: #333; font-size: 11px;">{}</span>'
-                '<small style="color: #666; font-size: 9px;">({:.0f}%)</small>'
+                '<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; white-space: nowrap;">'
+                '<span style="background: {}; color: white; min-width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 11px; font-weight: bold;">{}</span>'
+                '<span style="font-weight: bold; color: #333; font-size: 12px;">{}</span>'
+                '<small style="color: #666; font-size: 11px;">({}%)</small>'
                 '</div>',
-                color, no, f"{suara:,}", persen
+                color, no, f"{suara:,}", persen_fmt
             )
 
         rows = format_html('<div style="flex: 1;">{}{}{}</div>', 
@@ -214,12 +227,12 @@ class KabupatenKotaAdmin(ImportExportModelAdmin, PaslonAdminMixin):
                            get_badge("3", s3, p3_pct, "#dc3545"))
 
         stats = format_html(
-            '<div style="border-left: 1px solid #ddd; padding-left: 10px; margin-left: 10px; display: flex; flex-direction: column; justify-content: center; gap: 3px;">'
-            '<div style="font-size: 10px; color: #333; white-space: nowrap;">SAH: <strong>{}</strong></div>'
-            '<div style="font-size: 10px; color: #666; white-space: nowrap;">T.SAH: {}</div>'
-            '<div style="font-size: 10px; color: #000; white-space: nowrap; border-top: 1px solid #eee; padding-top: 2px;">TOTAL: <strong>{}</strong></div>'
+            '<div style="border-left: 1px solid #ddd; padding-left: 15px; margin-left: 10px; display: flex; flex-direction: column; justify-content: center; gap: 6px;">'
+            '<div style="display: flex; align-items: center; gap: 8px; white-space: nowrap;"><span style="background: #28a745; color: white; width: 50px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 10px; font-weight: bold;">SAH</span> <strong style="font-size: 12px; color: #333;">{}</strong> <small style="color: #666; font-size: 11px;">({})</small></div>'
+            '<div style="display: flex; align-items: center; gap: 8px; white-space: nowrap;"><span style="background: #dc3545; color: white; width: 50px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 10px; font-weight: bold;">T.SAH</span> <strong style="font-size: 12px; color: #333;">{}</strong> <small style="color: #666; font-size: 11px;">({})</small></div>'
+            '<div style="display: flex; align-items: center; gap: 8px; white-space: nowrap;"><span style="background: #6c757d; color: white; width: 50px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 10px; font-weight: bold;">TOTAL</span> <strong style="font-size: 12px; color: #333;">{}</strong> <small style="color: #007bff; font-size: 11px; font-weight: bold;">({})</small></div>'
             '</div>',
-            f"{total_sah:,}", f"{st:,}", f"{total_masuk:,}"
+            f"{total_sah:,}", sah_pct_str, f"{st:,}", tsah_pct_str, f"{total_masuk:,}", partisipasi_pct_str
         )
 
         return format_html(
@@ -481,16 +494,31 @@ class KecamatanAdmin(admin.ModelAdmin, PaslonAdminMixin):
         p2_pct = (s2 / total_sah * 100) if total_sah > 0 else 0
         p3_pct = (s3 / total_sah * 100) if total_sah > 0 else 0
 
+        # Ambil Data DPT untuk hitung partisipasi
+        try:
+            dpt = int(obj.rekap_tps_dpt_kecamatan.dpt_pemilu or 0)
+        except Exception:
+            dpt = 0
+
+        # Hitung Persentase Statistik
+        sah_pct = (total_sah / total_masuk * 100) if total_masuk > 0 else 0
+        tsah_pct = (st / total_masuk * 100) if total_masuk > 0 else 0
+        partisipasi_pct = (total_masuk / dpt * 100) if dpt > 0 else 0
+        
+        # Format string
+        sah_pct_str = f"{sah_pct:.0f}%"
+        tsah_pct_str = f"{tsah_pct:.0f}%"
+        partisipasi_pct_str = f"{partisipasi_pct:.1f}%"
+
         def get_badge(no, suara, persen, color):
-            # Pre-format number
-            suara_fmt = f"{suara:,}"
+            persen_fmt = f"{persen:.0f}"
             return format_html(
-                '<div style="display: flex; align-items: center; gap: 5px; margin-bottom: 2px; white-space: nowrap;">'
-                '<span style="background: {}; color: white; min-width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center; border-radius: 3px; font-size: 8px; font-weight: bold;">{}</span>'
-                '<span style="font-weight: bold; color: #333; font-size: 11px;">{}</span>'
-                '<small style="color: #666; font-size: 9px;">({:.0f}%)</small>'
+                '<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; white-space: nowrap;">'
+                '<span style="background: {}; color: white; min-width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 11px; font-weight: bold;">{}</span>'
+                '<span style="font-weight: bold; color: #333; font-size: 12px;">{}</span>'
+                '<small style="color: #666; font-size: 11px;">({}%)</small>'
                 '</div>',
-                color, no, suara_fmt, persen
+                color, no, f"{suara:,}", persen_fmt
             )
 
         rows = format_html('<div style="flex: 1;">{}{}{}</div>', 
@@ -498,18 +526,13 @@ class KecamatanAdmin(admin.ModelAdmin, PaslonAdminMixin):
                            get_badge("2", s2, p2_pct, "#007bff"),
                            get_badge("3", s3, p3_pct, "#dc3545"))
 
-        # Pre-format stats
-        sah_fmt = f"{total_sah:,}"
-        st_fmt = f"{st:,}"
-        total_fmt = f"{total_masuk:,}"
-
         stats = format_html(
-            '<div style="border-left: 1px solid #ddd; padding-left: 10px; margin-left: 10px; display: flex; flex-direction: column; justify-content: center; gap: 3px;">'
-            '<div style="font-size: 10px; color: #333; white-space: nowrap;">SAH: <strong>{}</strong></div>'
-            '<div style="font-size: 10px; color: #666; white-space: nowrap;">T.SAH: {}</div>'
-            '<div style="font-size: 10px; color: #000; white-space: nowrap; border-top: 1px solid #eee; padding-top: 2px;">TOTAL: <strong>{}</strong></div>'
+            '<div style="border-left: 1px solid #ddd; padding-left: 15px; margin-left: 10px; display: flex; flex-direction: column; justify-content: center; gap: 6px;">'
+            '<div style="display: flex; align-items: center; gap: 8px; white-space: nowrap;"><span style="background: #28a745; color: white; width: 50px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 10px; font-weight: bold;">SAH</span> <strong style="font-size: 12px; color: #333;">{}</strong> <small style="color: #666; font-size: 11px;">({})</small></div>'
+            '<div style="display: flex; align-items: center; gap: 8px; white-space: nowrap;"><span style="background: #dc3545; color: white; width: 50px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 10px; font-weight: bold;">T.SAH</span> <strong style="font-size: 12px; color: #333;">{}</strong> <small style="color: #666; font-size: 11px;">({})</small></div>'
+            '<div style="display: flex; align-items: center; gap: 8px; white-space: nowrap;"><span style="background: #6c757d; color: white; width: 50px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 10px; font-weight: bold;">TOTAL</span> <strong style="font-size: 12px; color: #333;">{}</strong> <small style="color: #007bff; font-size: 11px; font-weight: bold;">({})</small></div>'
             '</div>',
-            sah_fmt, st_fmt, total_fmt
+            f"{total_sah:,}", sah_pct_str, f"{st:,}", tsah_pct_str, f"{total_masuk:,}", partisipasi_pct_str
         )
 
         return format_html(
@@ -781,40 +804,37 @@ class KelurahanDesaAdmin(ImportExportModelAdmin, PaslonAdminMixin):
 # =========================================================================
 
 # --- 2.1 PARTAI ---
-class PartaiResource(resources.ModelResource):
-    class Meta:
-        model = Partai
-        fields = ('no_urut', 'nama_partai', 'logo')
-        export_order = ('no_urut', 'nama_partai', 'logo')
-        import_id_fields = ['no_urut']
-        skip_unchanged = True
-        report_skipped = True
-
 @admin.register(Partai)
-class PartaiAdmin(admin.ModelAdmin, PaslonAdminMixin): # GANTI INI (ImportExportModelAdmin -> admin.ModelAdmin)
-    #resource_class = PartaiResource
-    list_display = ['info_lengkap']
-    # list_display_links = ['info_lengkap']
-    list_display_links = None
+class PartaiAdmin(admin.ModelAdmin, PaslonAdminMixin):
+    list_display = ['info_lengkap', 'warna_badge']
+    list_display_links = ['info_lengkap']
     ordering = ['no_urut']
     search_fields = ['nama_partai', 'no_urut']
     list_filter = ['nama_partai', 'no_urut']
-    #formats = [XLSX]
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    # PENGATURAN IZIN (Ubah ke True kalau mau Edit/Tambah/Hapus lagi)
+    # PENGATURAN IZIN (Hanya Edit, Tidak Boleh Tambah/Hapus)
     # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    def has_add_permission(self, request):
-        """Mencegah Tambah Data Partai Baru"""
-        return False
+    def has_add_permission(self, request): return False
+    def has_delete_permission(self, request, obj=None): return False
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        if db_field.name == 'warna':
+            # Gunakan widget color picker HTML5
+            from django.forms import TextInput
+            kwargs['widget'] = TextInput(attrs={'type': 'color', 'style': 'height: 40px; width: 80px; padding: 2px;'})
+        return super().formfield_for_dbfield(db_field, **kwargs)
 
-    def has_change_permission(self, request, obj=None):
-        """Mencegah Edit Data Partai"""
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        """Mencegah Hapus Data Partai"""
-        return False
+    def warna_badge(self, obj):
+        return format_html(
+            '<div style="display: flex; align-items: center; gap: 5px;">'
+            '<div style="background-color: {}; width: 30px; height: 30px; border: 1px solid #ddd; border-radius: 4px;"></div>'
+            '<code>{}</code>'
+            '</div>',
+            obj.warna, obj.warna
+        )
+    warna_badge.short_description = "Warna"
     # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     
     def info_lengkap(self, obj):
@@ -1243,7 +1263,7 @@ class RekapTPSDPTKecamatanResource(resources.ModelResource):
     )
     class Meta:
         model = RekapTPSDPTKecamatan
-        fields = ('id', 'kecamatan', 'tps_pemilu', 'dpt_pemilu')
+        fields = ('id', 'kabupaten', 'kecamatan', 'tps_pemilu', 'dpt_pemilu')
         import_id_fields = ['kecamatan']
         skip_unchanged = True
 
@@ -1266,7 +1286,7 @@ class SuaraPilpresKecamatanResource(resources.ModelResource):
     )
     class Meta:
         model = SuaraPilpresKecamatan
-        fields = ('id', 'kecamatan', 'suara_paslon_1', 'suara_paslon_2', 'suara_paslon_3', 'suara_tidak_sah')
+        fields = ('id', 'kabupaten', 'kecamatan', 'suara_paslon_1', 'suara_paslon_2', 'suara_paslon_3', 'suara_tidak_sah')
         import_id_fields = ['kecamatan']
         skip_unchanged = True
 
@@ -1293,7 +1313,7 @@ class RekapTPSDPTResource(resources.ModelResource):
     desa = fields.Field(column_name='desa', attribute='desa', widget=SmartDesaWidget(KelurahanDesa, 'desa_kelurahan'))
     class Meta:
         model = RekapTPSDPT
-        fields = ('id', 'desa', 'tps_pemilu', 'dpt_pemilu')
+        fields = ('id', 'kabupaten', 'kecamatan', 'desa', 'tps_pemilu', 'dpt_pemilu')
         import_id_fields = ['desa']
         skip_unchanged = True
         follow_relations = True
@@ -1307,16 +1327,7 @@ class RekapTPSDPTResource(resources.ModelResource):
             if not found: new_headers.append(h)
         dataset.headers = new_headers
 
-# --- 3.2 PASLON PILPRES ---
-class PaslonPilpresResource(resources.ModelResource):
-    class Meta:
-        model = PaslonPilpres
-        fields = ('no_urut', 'nama_capres', 'nama_cawapres', 'foto_paslon')
-        export_order = ('no_urut', 'nama_capres', 'nama_cawapres', 'foto_paslon')
-        import_id_fields = ['no_urut']
-        skip_unchanged = True
-        report_skipped = True
-
+# --- 3.4 PASLON PILPRES ---
 class PaslonPilpresAdminForm(forms.ModelForm):
     class Meta:
         model = PaslonPilpres
@@ -1329,17 +1340,41 @@ class PaslonPilpresAdminForm(forms.ModelForm):
         self.fields['koalisi'].queryset = avail.order_by('no_urut')
 
 @admin.register(PaslonPilpres)
-class PaslonPilpresAdmin(ImportExportModelAdmin, PaslonAdminMixin):
-    resource_class = PaslonPilpresResource
+class PaslonPilpresAdmin(admin.ModelAdmin, PaslonAdminMixin):
     form = PaslonPilpresAdminForm
-    list_display = ['info_paslon', 'koalisi_partai']
+    list_display = ['info_paslon', 'warna_badge', 'koalisi_partai']
     list_display_links = ['info_paslon']
     ordering = ['no_urut']
     filter_horizontal = ['koalisi']
     search_fields = ['nama_capres', 'nama_cawapres']
-    formats = [XLSX]
+    
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # PENGATURAN IZIN (Hanya Edit, Tidak Boleh Tambah/Hapus)
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    def has_add_permission(self, request): return False
+    def has_delete_permission(self, request, obj=None): return False
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
     def get_queryset(self, request): return super().get_queryset(request).prefetch_related('koalisi')
     def save_model(self, request, obj, form, change): super().save_model(request, obj, form, change); clear_paslon_cache()
+
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        if db_field.name == 'warna':
+            # Gunakan widget color picker HTML5
+            from django.forms import TextInput
+            kwargs['widget'] = TextInput(attrs={'type': 'color', 'style': 'height: 40px; width: 80px; padding: 2px;'})
+        return super().formfield_for_dbfield(db_field, **kwargs)
+
+    def warna_badge(self, obj):
+        return format_html(
+            '<div style="display: flex; align-items: center; gap: 5px;">'
+            '<div style="background-color: {}; width: 30px; height: 30px; border: 1px solid #ddd; border-radius: 4px;"></div>'
+            '<code>{}</code>'
+            '</div>',
+            obj.warna, obj.warna
+        )
+    warna_badge.short_description = "Warna"
+
     def info_paslon(self, obj):
         return format_html('<div style="display: flex; align-items: center; gap: 10px;">{}<div><strong style="font-size: 14px;">{} - {}</strong><br><small style="color: #666;">No. Urut: {}</small></div></div>', format_html(self.get_image_preview(obj.foto_paslon)), obj.nama_capres, obj.nama_cawapres, obj.no_urut)
     info_paslon.short_description = "Pasangan Calon"
@@ -1487,33 +1522,10 @@ class PaslonPilkadaAdmin(ImportExportModelAdmin, PaslonAdminMixin):
     info_paslon.short_description = "Pasangan Calon"
 
 # =========================================================================
-# BAGIAN 4: GEOSPATIAL ADMIN (PETA DIGITAL)
+# BAGIAN 5: GEOSPATIAL ADMIN (PETA DIGITAL)
 # =========================================================================
-
-class GeoColorForm(forms.ModelForm):
-    """Form khusus untuk menambahkan Color Picker"""
-    class Meta:
-        widgets = {
-            'warna_area': forms.TextInput(attrs={'type': 'color', 'style': 'height: 40px; width: 100px; cursor: pointer; border: none; padding: 2px; background: none;'}),
-        }
-
 class GeoAdminMixin:
     """Mixin untuk fungsi bersama antara data geospatial (Kokab, Kec, Deskel)"""
-    
-    def changelist_view(self, request, extra_context=None):
-        """Menambahkan tombol besar di bagian atas list view (Main Dashboard)"""
-        extra_context = extra_context or {}
-        extra_context['dashboard_button_html'] = format_html(
-            '<div style="margin-bottom: 20px; padding: 15px; background: #FFF9E6; border: 1px solid #D4AF37; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">'
-            '<div><strong style="font-size: 18px; color: #800000; display: flex; align-items: center; gap: 10px;">'
-            '<span style="background: #800000; color: white; padding: 5px 10px; border-radius: 8px; font-size: 14px;">PRO</span> WAR ROOM - PETA DIGITAL</strong>'
-            '<p style="margin: 5px 0 0 0; color: #555; font-size: 13px;">Klik tombol di samping untuk beralih ke Dashboard Peta Interaktif (Full Screen).</p></div>'
-            '<a href="/map/" target="_blank" style="background: #800000; color: white !important; padding: 12px 25px; font-weight: 700; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 10px; transition: all 0.3s; border: 1px solid #D4AF37;">'
-            '🌍 BUKA PETA ANALISIS</a>'
-            '</div>'
-        )
-        return super().changelist_view(request, extra_context=extra_context)
-
     def preview_peta(self, obj):
         if not obj or not obj.vektor_wilayah:
             return "Belum ada data vektor untuk ditampilkan."
@@ -1554,23 +1566,33 @@ class GeoAdminMixin:
                         
                         try {{
                             var geoData = {1};
+                            var colorInput = document.getElementById('id_warna_area');
+                            var defaultColor = "{2}";
+                            
                             mapLayer = L.geoJSON(geoData, {{
                                 style: function(feature) {{
+                                    var currentColor = colorInput ? colorInput.value : defaultColor;
                                     return {{
-                                        color: document.getElementById('id_warna_area').value || "{2}",
+                                        color: currentColor,
                                         weight: 3,
                                         fillOpacity: 0.4
                                     }};
                                 }}
                             }}).addTo(map);
-                            map.fitBounds(mapLayer.getBounds(), {{ padding: [30, 30] }});
+                            
+                            // Auto Zoom ke tengah wilayah
+                            if (mapLayer.getLayers().length > 0) {{
+                                map.fitBounds(mapLayer.getBounds(), {{ padding: [30, 30] }});
+                            }}
 
-                            // LIVE COLOR UPDATE!
-                            document.getElementById('id_warna_area').addEventListener('input', function(e) {{
-                                if (mapLayer) {{
-                                    mapLayer.setStyle({{ color: e.target.value }});
-                                }};
-                            }});
+                            // LIVE COLOR UPDATE (Hanya jika input ada/editable)
+                            if (colorInput) {{
+                                colorInput.addEventListener('input', function(e) {{
+                                    if (mapLayer) {{
+                                        mapLayer.setStyle({{ color: e.target.value }});
+                                    }};
+                                }});
+                            }}
 
                         }} catch (e) {{
                             console.error("Leaflet Parse Error:", e);
@@ -1587,21 +1609,18 @@ class GeoAdminMixin:
 
 @admin.register(GeoKokab)
 class GeoKokabAdmin(GeoAdminMixin, admin.ModelAdmin):
-    form = GeoColorForm
     list_display = ['kokab', 'warna_area', 'last_update']
     search_fields = ['kokab__nama']
-    readonly_fields = ['preview_peta']
+    readonly_fields = ['warna_area', 'preview_peta']
 
 @admin.register(GeoKecamatan)
 class GeoKecamatanAdmin(GeoAdminMixin, admin.ModelAdmin):
-    form = GeoColorForm
     list_display = ['kecamatan', 'warna_area']
     search_fields = ['kecamatan__nama']
-    readonly_fields = ['preview_peta']
+    readonly_fields = ['warna_area', 'preview_peta']
 
 @admin.register(GeoDesKel)
 class GeoDesKelAdmin(GeoAdminMixin, admin.ModelAdmin):
-    form = GeoColorForm
     list_display = ['deskel', 'warna_area']
     search_fields = ['deskel__desa_kelurahan']
-    readonly_fields = ['preview_peta']
+    readonly_fields = ['warna_area', 'preview_peta']

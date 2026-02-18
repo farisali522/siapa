@@ -21,6 +21,7 @@ def paslon_photo_path(instance, filename):
 class Partai(models.Model):
     no_urut = models.IntegerField(unique=True, verbose_name="Nomor Urut")
     nama_partai = models.CharField(max_length=200, verbose_name="Nama Partai")
+    warna = models.CharField(max_length=7, default="#000000", verbose_name="Warna Identitas (Hex)", help_text="Format: #RRGGBB")
     logo = models.ImageField(upload_to=partai_logo_path, verbose_name="Logo Partai", blank=True, null=True)
     
     class Meta:
@@ -37,6 +38,7 @@ class PaslonPilpres(models.Model):
     nama_capres = models.CharField(max_length=200, verbose_name="Nama Calon Presiden")
     nama_cawapres = models.CharField(max_length=200, verbose_name="Nama Calon Wakil Presiden")
     koalisi = models.ManyToManyField(Partai, verbose_name="Gabungan Partai Politik Pengusul", blank=True)
+    warna = models.CharField(max_length=7, default="#000000", verbose_name="Warna Identitas (Hex)", help_text="Format: #RRGGBB")
     foto_paslon = models.ImageField(upload_to=paslon_photo_path, verbose_name="Foto Paslon", blank=True, null=True)
     
     class Meta:
@@ -601,7 +603,7 @@ class GeoKokab(models.Model):
         help_text="Paste kode GeoJSON batas wilayah di sini",
         blank=True, null=True
     )
-    warna_area = models.CharField(max_length=7, default="#CC0000", verbose_name="Warna Area (Hex)")
+    warna_area = models.CharField(max_length=7, default="#808080", verbose_name="Warna Area (Hex)")
     last_update = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -623,7 +625,7 @@ class GeoKecamatan(models.Model):
         verbose_name="Data Vektor (GeoJSON)",
         blank=True, null=True
     )
-    warna_area = models.CharField(max_length=7, default="#00CC00")
+    warna_area = models.CharField(max_length=7, default="#808080", verbose_name="Warna Area (Hex)")
 
     class Meta:
         verbose_name = "Geo Kecamatan"
@@ -644,7 +646,7 @@ class GeoDesKel(models.Model):
         verbose_name="Data Vektor (GeoJSON)",
         blank=True, null=True
     )
-    warna_area = models.CharField(max_length=7, default="#0000CC")
+    warna_area = models.CharField(max_length=7, default="#808080", verbose_name="Warna Area (Hex)")
 
     class Meta:
         verbose_name = "Geo DesKel"
