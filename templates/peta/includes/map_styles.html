@@ -12,6 +12,13 @@
         --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
+    /* Sinkronisasi Tinggi Navbar di HP */
+    @media (max-width: 768px) {
+        :root {
+            --nav-height: 60px;
+        }
+    }
+
     * {
         box-sizing: border-box;
         -webkit-font-smoothing: antialiased;
@@ -211,15 +218,23 @@
     @media (max-width: 768px) {
         .map-floating-header {
             flex-direction: column;
-            padding: 12px;
-            gap: 10px;
+            padding: 10px 15px;
+            gap: 8px;
             align-items: stretch;
-            top: 10px;
+            top: 12px; /* Jarak aman dari navbar mobile */
+            width: 92%;
         }
         .header-group { width: 100%; flex: none !important; justify-content: flex-start !important; }
         .header-select { padding: 8px 12px; font-size: 12px; }
         .header-divider { display: none; }
-        .status-group { flex-direction: row !important; justify-content: space-between !important; width: 100%; }
+        .status-group { 
+            flex-direction: row !important; 
+            justify-content: space-between !important; 
+            width: 100%;
+            margin-top: 5px;
+            padding-top: 5px;
+            border-top: 1px solid #eee;
+        }
         .hide-mobile { display: none !important; }
     }
 
