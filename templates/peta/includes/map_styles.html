@@ -199,7 +199,9 @@
 
     /* --- FLOATING UI --- */
     .map-floating-header {
-        position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+        position: fixed; 
+        top: calc(var(--nav-height) + 15px); 
+        left: 50%; transform: translateX(-50%);
         width: 94%; max-width: 1200px;
         background: rgba(255, 255, 255, 0.98);
         backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -207,6 +209,7 @@
         box-shadow: 0 12px 40px rgba(0,0,0,0.12); z-index: 1050;
         display: flex; align-items: center; justify-content: space-between; gap: 15px;
         border: 1px solid rgba(255,255,255,0.8); transition: var(--transition);
+        touch-action: manipulation; /* Cegah zoom/scroll aneh di iPhone */
     }
 
     .header-group { display: flex; align-items: center; gap: 10px; }
@@ -217,11 +220,13 @@
     /* Mobile Responsive Header */
     @media (max-width: 768px) {
         .map-floating-header {
+            position: fixed;
+            top: calc(var(--nav-height) + 12px);
+            left: 50%; transform: translateX(-50%);
             flex-direction: column;
             padding: 10px 15px;
             gap: 8px;
             align-items: stretch;
-            top: 12px; /* Jarak aman dari navbar mobile */
             width: 92%;
         }
         .header-group { width: 100%; flex: none !important; justify-content: flex-start !important; }
