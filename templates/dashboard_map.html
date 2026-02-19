@@ -29,14 +29,57 @@
     </div>
 
     <div class="nav-right">
-        <a href="{% url 'dashboard_overview' %}" class="btn-nav-admin" style="margin-right: 10px; background: white; color: var(--maroon) !important;">
+        {% if user.is_superuser %}
+        <a href="{% url 'dashboard_overview' %}" class="btn-nav-admin" style="background: white; color: var(--maroon) !important; border: 1px solid #eee;">
             <i class="fas fa-arrow-left"></i> <span class="hide-mobile">Dashboard</span>
         </a>
-        <a href="/xxx/" class="btn-nav-admin">
+        <a href="/xxx/" class="btn-nav-admin" style="background: white; color: var(--maroon) !important; border: 1px solid #eee;">
             <i class="fas fa-cogs"></i> <span class="hide-mobile">Admin Panel</span>
         </a>
+        <div class="header-divider hide-mobile"></div>
+        {% endif %}
+
+        <div class="user-profile-dropdown" id="profileDropdown">
+            <div class="profile-trigger" onclick="toggleProfileDropdown(event)">
+                <i class="fas fa-user-circle" style="font-size: 22px; opacity: 0.9;"></i>
+                <span class="user-name-box" style="font-weight: 700; font-size: 13px;">
+                    {{ user.username }}
+                </span>
+                <i class="fas fa-chevron-down" style="font-size: 10px; opacity: 0.5;"></i>
+            </div>
+            
+            <div class="dropdown-content">
+                <div class="dropdown-header">
+                    <span>Logged in as</span>
+                    <strong>{{ user.username }}</strong>
+                </div>
+                <a href="{% url 'custom_logout' %}" class="dropdown-item logout">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
     </div>
 </nav>
+
+<script>
+    function toggleProfileDropdown(e) {
+        e.stopPropagation();
+        document.getElementById('profileDropdown').classList.toggle('active');
+    }
+
+    // Klik di mana saja untuk menutup dropdown
+    window.addEventListener('click', function() {
+        const dropdown = document.getElementById('profileDropdown');
+        if (dropdown && dropdown.classList.contains('active')) {
+            dropdown.classList.remove('active');
+        }
+    });
+
+    // Jangan tutup kalau klik di dalam kotak dropdown-nya
+    document.querySelector('.dropdown-content').addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+</script>
 
 <!-- Main Wrapper -->
 <div class="main-wrapper">

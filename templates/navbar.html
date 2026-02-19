@@ -16,24 +16,50 @@
 
     <div class="nav-right">
         <!-- User Profile Dropdown -->
-        <div class="user-profile" onclick="this.classList.toggle('active')">
+        <div class="user-profile" id="navbarProfileDropdown" onclick="toggleNavbarProfile(event)">
             <div class="user-avatar">
                 <i class="fas fa-user"></i>
             </div>
-            <span class="user-name">
+            <span class="user-name hide-mobile">
                 {% if user.is_authenticated %}
-                    {{ user.username|title }}
+                    {{ user.username }}
                 {% endif %}
             </span>
+            <i class="fas fa-chevron-down" style="font-size: 10px; opacity: 0.5;"></i>
+            
             <!-- Dropdown Content -->
             <div class="dropdown-content">
-                <a href="{% url 'custom_logout' %}">
+                <div class="dropdown-header">
+                    <span>Logged in as</span>
+                    <strong>{{ user.username }}</strong>
+                </div>
+                <a href="{% url 'custom_logout' %}" class="logout-item">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
             </div>
         </div>
     </div>
 </nav>
+
+<script>
+    function toggleNavbarProfile(e) {
+        e.stopPropagation();
+        document.getElementById('navbarProfileDropdown').classList.toggle('active');
+    }
+
+    // Klik luar tutup dropdown
+    window.addEventListener('click', function() {
+        const drop = document.getElementById('navbarProfileDropdown');
+        if (drop && drop.classList.contains('active')) {
+            drop.classList.remove('active');
+        }
+    });
+
+    // Cegah tutup saat klik di dalam menu
+    document.querySelector('.dropdown-content').addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+</script>
 
 <style>
     /* Navbar Styles */
@@ -104,27 +130,27 @@
         line-height: 1;
     }
 
-    .brand-text span {
-        font-size: 11px;
-        color: #888;
-        font-weight: 400;
-        letter-spacing: 0.5px;
-    }
-
     /* User Profile */
     .user-profile {
         display: flex;
         align-items: center;
         gap: 10px;
         cursor: pointer;
-        padding: 8px 12px;
+        padding: 6px 14px;
         border-radius: 12px;
         transition: var(--transition);
         position: relative;
+        border: 1px solid transparent;
     }
 
     .user-profile:hover {
-        background: var(--gray);
+        background: rgba(128, 0, 0, 0.05);
+        border-color: rgba(128, 0, 0, 0.1);
+    }
+
+    .user-profile.active {
+        background: rgba(128, 0, 0, 0.08);
+        border-color: rgba(128, 0, 0, 0.1);
     }
 
     .user-avatar {
@@ -132,90 +158,116 @@
         height: 32px;
         background: var(--maroon);
         color: var(--white);
-        border-radius: 50%;
+        border-radius: 50%; /* Bulat sesuai dashboard map */
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 14px;
+        border: 1px solid var(--gold);
     }
 
     .user-name {
-        font-weight: 600;
+        font-weight: 700;
         font-size: 14px;
-        color: var(--dark);
+        color: var(--maroon);
     }
 
-    /* Dropdown simple setup */
+    /* Dropdown Content */
     .dropdown-content {
         display: none;
         position: absolute;
         top: 100%;
         right: 0;
         background: var(--white);
-        min-width: 150px;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        min-width: 180px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         border-radius: 12px;
         padding: 8px;
-        z-index: 1;
-        margin-top: 5px;
+        z-index: 1000;
+        margin-top: 10px;
         border: 1px solid var(--border);
+        transform-origin: top right;
+        animation: dropDownScale 0.2s ease;
     }
 
-    /* Tampilkan dropdown saat ada class active */
+    @keyframes dropDownScale {
+        from { opacity: 0; transform: translateY(10px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
     .user-profile.active .dropdown-content {
         display: block;
-        animation: fadeIn 0.2s ease;
     }
 
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
+    .dropdown-header {
+        padding: 8px 12px;
+        border-bottom: 2px solid #f8f9fa;
+        margin-bottom: 5px;
+    }
+
+    .dropdown-header span {
+        display: block;
+        font-size: 10px;
+        color: #999;
+        text-transform: uppercase;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+    }
+
+    .dropdown-header strong {
+        font-size: 14px;
+        color: var(--maroon);
+        font-weight: 700;
     }
 
     .dropdown-content a {
-        color: var(--dark);
+        display: flex;
+        align-items: center;
+        gap: 10px;
         padding: 10px 12px;
         text-decoration: none;
-        display: block;
+        color: var(--dark);
         font-size: 13px;
+        font-weight: 600;
         border-radius: 8px;
         transition: var(--transition);
     }
 
     .dropdown-content a:hover {
-        background: #ffebee;
+        background: #f8f9fa;
         color: var(--maroon);
+        padding-left: 15px;
+    }
+
+    .logout-item {
+        color: #dc3545 !important;
+    }
+
+    .logout-item:hover {
+        background: #fff5f5 !important;
+        color: #d32f2f !important;
     }
 
     @media (max-width: 768px) {
-        /* .brand-text span { display: none; } */
-        /* .user-name { display: none; } */
-
-        /* Peringkas Navbar Mobile */
         .navbar {
-            padding: 0 12px; /* Kurangi padding kiri-kanan */
-            height: 60px; /* Sedikit lebih pendek */
+            padding: 0 12px;
+            height: 60px;
         }
         
         .brand-badge {
-            width: 30px; height: 30px; font-size: 16px;
+            width: 32px; height: 32px; font-size: 16px;
         }
         
         .brand-text h1 {
             font-size: 16px; 
         }
-        
-        .brand-text span {
-            font-size: 9px; /* Kecilkan subtext */
-        }
-        
-        .menu-toggle {
-            font-size: 18px;
-            padding: 4px;
-        }
-        
+
         .user-profile {
-            padding: 4px 8px; /* Lebih ringkas */
+            padding: 4px 8px;
+        }
+
+        .hide-mobile {
+            display: none;
         }
     }
 </style>

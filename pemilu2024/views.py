@@ -1,8 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from .models import Kecamatan, KelurahanDesa
 from peta.models import GeoKokab, GeoKecamatan, GeoDesKel
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
 
 def landing(request):
     return render(request, 'landing.html')
@@ -19,6 +21,10 @@ def dashboard_peta(request):
 @login_required
 def dashboard_overview(request):
     """Halaman Dashboard Ringkasan (General)"""
+    # REDIRECTION LOGIC: User grup 'map' tidak boleh lihat dashboard, lempar ke peta
+    if not request.user.is_superuser and request.user.groups.filter(name='map').exists():
+        return redirect('dashboard_peta')
+
     from django.contrib.admin.models import LogEntry
     
     # Ambil 10 aktivitas terakhir dari LogEntry admin
@@ -345,12 +351,12 @@ def get_desa(request):
     return JsonResponse(data, safe=False)
 
 # Login Views
-from django.contrib.auth import authenticate, login, logout
-from django.shortcuts import redirect
-from django.contrib import messages
 
 def custom_login(request):
     if request.user.is_authenticated:
+        # Check redirection based on group
+        if not request.user.is_superuser and request.user.groups.filter(name='map').exists():
+            return redirect('dashboard_peta')
         return redirect('dashboard_overview')
         
     if request.method == 'POST':
@@ -360,6 +366,9 @@ def custom_login(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
+            # Check redirection after login
+            if not user.is_superuser and user.groups.filter(name='map').exists():
+                return redirect('dashboard_peta')
             return redirect('dashboard_overview')
         else:
             return render(request, 'login.html', {'error': 'Username atau password salah.'})
