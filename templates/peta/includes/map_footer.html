@@ -1,0 +1,24 @@
+<!-- FLOATING FOOTER PANEL (RECAP) -->
+<div class="map-floating-footer" id="mainFooterPanel">
+    <div class="footer-handle-bar" onclick="toggleFooterPanel()">
+        <div class="footer-handle-indicator"></div>
+        <div style="font-size: 14px; font-weight: 700; color: var(--maroon); display:flex; align-items:center; gap:8px;">
+            <i class="fas fa-chart-pie"></i> <span id="footerTitle">REKAPITULASI PROVINSI (REAL COUNT)</span>
+        </div>
+        <div style="color:#999;"><i class="fas fa-chevron-up" id="footerToggleIcon"></i></div>
+    </div>
+    
+    <div class="footer-content">
+        <!-- Dynamic Content Injected by calculateRecap() -->
+        <div id="recapContentPlaceholder" style="text-align:center; padding: 20px; color:#888;">
+            <i class="fas fa-spinner fa-spin"></i> Menghitung Rekapitulasi Data...
+        </div>
+        <div id="recapRealContent" style="display:none;"></div>
+    </div>
+</div>
+
+<!-- LOADER -->
+<div class="map-loader" id="mapLoader" style="position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:2000; transition: opacity 0.5s;">
+    <div class="loader-spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid #800000; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
+    <p style="margin-top: 20px; font-weight: 600; color: var(--maroon);">Memuat Data Peta...</p>
+</div>

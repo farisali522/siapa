@@ -1,0 +1,216 @@
+<script>
+    // --- GLOBAL STATE ---
+    var map;
+    var currentGeoLayer = null;
+    var navHistory = []; 
+
+    // --- MODE ROUTER ---
+    function getModeHandler() {
+        const mode = document.getElementById('analysis-mode').value;
+        switch(mode) {
+            case 'pilpres': return PilpresMode;
+            case 'pileg_ri': return PilegRiMode;
+            case 'pileg_prov': return PilegProvMode;
+            case 'pileg_kokab': return PilegKokabMode;
+            case 'all': return AnalisisMode;
+            default: return AnalisisMode;
+        }
+    }
+
+    // --- UI HELPERS ---
+    function toggleFooterPanel() {
+        const panel = document.getElementById('mainFooterPanel');
+        const icon = document.getElementById('footerToggleIcon');
+        panel.classList.toggle('collapsed');
+        if (panel.classList.contains('collapsed')) {
+            icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+        } else {
+            icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+        }
+    }
+
+    function updateNavUI(isDrillDown, name = "") {
+        const globalSel = document.getElementById('global-selector');
+        const drillNav = document.getElementById('drilldown-nav');
+        const breadText = document.getElementById('breadcrumb-text');
+        if (isDrillDown) {
+            globalSel.style.display = 'none';
+            drillNav.style.display = 'block';
+            breadText.innerText = name;
+        } else {
+            globalSel.style.display = 'flex';
+            drillNav.style.display = 'none';
+        }
+    }
+
+    // --- MAP CORE ---
+    function initMap() {
+        map = L.map('map', { zoomControl: false, attributionControl: false }).setView([-6.9175, 107.6191], 9);
+        L.control.zoom({ position: 'topright' }).addTo(map);
+
+        map.on('zoomend', function() {
+            const z = map.getZoom();
+            document.getElementById('map').classList.toggle('hide-map-labels', z < 10);
+        });
+
+        if (map.getZoom() < 10) document.getElementById('map').classList.add('hide-map-labels');
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+        const resizeObserver = new ResizeObserver(() => { if (map) map.invalidateSize(); });
+        resizeObserver.observe(document.getElementById('map'));
+
+        map.whenReady(() => {
+            const lastMode = localStorage.getItem('lastAnalysisMode');
+            if (lastMode) {
+                const s = document.getElementById('analysis-mode');
+                if (s) s.value = lastMode;
+            }
+
+            const cachedState = localStorage.getItem('mapLastState');
+            if (cachedState) {
+                try {
+                    const state = JSON.parse(cachedState);
+                    if (state.history) navHistory = state.history;
+                    loadGeoData(state.level, state.params, state.name || null);
+                    if (state.level !== 'kokab') updateNavUI(true, state.name);
+                } catch(e) { loadGeoData('kokab', {}, null); }
+            } else {
+                loadGeoData('kokab', {}, null);
+            }
+        });
+    }
+
+    // --- LOGIC: NAVIGATION ---
+    function changeAnalysisMode(mode) {
+        localStorage.setItem('lastAnalysisMode', mode);
+        const cur = currentGeoLayer ? currentGeoLayer.options : { levelName: 'kokab', apiParams: {} };
+        loadGeoData(cur.levelName, cur.apiParams, null);
+    }
+
+    function resetToLevel(level) {
+        navHistory = []; 
+        localStorage.removeItem('mapLastState');
+        updateNavUI(false);
+        loadGeoData(level, {}, null);
+    }
+
+    function navigateUp() {
+        if (navHistory.length === 0) return;
+        const prevState = navHistory.pop();
+        const newState = { level: prevState.level, params: prevState.params, name: prevState.name, history: navHistory };
+        if (prevState.level === 'kokab') localStorage.removeItem('mapLastState');
+        else localStorage.setItem('mapLastState', JSON.stringify(newState));
+        loadGeoData(prevState.level, prevState.params, null, prevState.bounds);
+        updateNavUI(navHistory.length > 0, navHistory.length > 0 ? navHistory[navHistory.length-1].name : "");
+    }
+
+    function drillDown(nextLevel, parentId, parentName, currentBounds) {
+        navHistory.push({
+            level: currentGeoLayer.options.levelName, 
+            params: currentGeoLayer.options.apiParams,
+            bounds: currentBounds,
+            name: document.getElementById('breadcrumb-text').innerText || "Jawa Barat"
+        });
+        let params = {};
+        if (nextLevel === 'kecamatan') params = { kab_id: parentId };
+        if (nextLevel === 'desa') params = { kec_id: parentId };
+        localStorage.setItem('mapLastState', JSON.stringify({ level: nextLevel, params: params, name: parentName, history: navHistory }));
+        loadGeoData(nextLevel, params, parentName);
+    }
+
+    // --- LOGIC: DATA LOADER ---
+    function loadGeoData(level, params, contextName, restoreBounds = null) {
+        const loader = document.getElementById('mapLoader');
+        loader.style.display = 'flex'; loader.style.opacity = '1';
+        const mode = document.getElementById('analysis-mode').value;
+        let query = `level=${level}&mode=${mode}`;
+        for (const [k, v] of Object.entries(params)) query += `&${k}=${v}`;
+
+        fetch(`/get_geo_data/?${query}`)
+            .then(res => res.json())
+            .then(data => {
+                if (currentGeoLayer) map.removeLayer(currentGeoLayer);
+                document.getElementById('count-wilayah').innerText = data.features.length;
+                if (data.features.length > 0) {
+                    if (contextName) updateNavUI(true, contextName);
+                    
+                    const handler = getModeHandler();
+                    
+                    // Update Title Recap
+                    const titleEl = document.getElementById('footerTitle');
+                    titleEl.innerText = contextName ? `REKAPITULASI ${contextName.toUpperCase()}` : `REKAPITULASI PROVINSI (DATA MAP)`;
+
+                    // Run Mode-Specific Recap
+                    handler.calculateRecap(data.features, contextName);
+
+                    currentGeoLayer = L.geoJSON(data, {
+                        levelName: level, apiParams: params,
+                        style: f => ({ color: f.properties.warna, weight: 1.5, opacity: 0.9, fillOpacity: 0.75, fillColor: f.properties.warna || "#800000" }),
+                        onEachFeature: (feature, layer) => {
+                            const props = feature.properties;
+                            layer.bindTooltip(`<div class="label-content">${props.nama}</div>`, { permanent: true, direction: 'center', className: 'map-label-responsive', opacity: 0.9 });
+                            layer.on('mouseover', e => {
+                                e.target.setStyle({ weight: 3.5, opacity: 1 });
+                                if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) e.target.bringToFront();
+                            });
+                            layer.on('mouseout', e => currentGeoLayer.resetStyle(e.target));
+                            layer.on('click', e => {
+                                L.DomEvent.stopPropagation(e);
+                                renderPopup(props, layer, handler);
+                            });
+                        }
+                    }).addTo(map);
+                    if (restoreBounds) map.fitBounds(restoreBounds);
+                    else try { map.fitBounds(currentGeoLayer.getBounds(), { padding: [50, 50] }); } catch(err){}
+                } else {
+                    alert("Data wilayah ini belum tersedia.");
+                    if (navHistory.length > 0) navigateUp();
+                }
+            })
+            .catch(e => alert("Gagal memuat data peta."))
+            .finally(() => { loader.style.opacity = '0'; setTimeout(() => { loader.style.display = 'none'; }, 500); });
+    }
+
+    function renderPopup(props, layer, handler) {
+        let actionBtn = "";
+        if (props.level === 'kokab') actionBtn = `<button onclick="drillDown('kecamatan', ${props.id}, '${props.nama}')" class="btn-popup">Lihat Kecamatan <i class="fas fa-arrow-down"></i></button>`;
+        else if (props.level === 'kecamatan') actionBtn = `<button disabled class="btn-popup-disabled">Data Desa Belum Tersedia <i class="fas fa-lock"></i></button>`;
+
+        // Call specific mode popup renderer
+        const contentHTML = handler.renderPopup(props);
+
+        layer.bindPopup(`<div class="popup-premium-container"><h3>${props.nama}</h3><div class="popup-meta">${props.kabupaten || ''}</div>${contentHTML}${actionBtn}</div>`, { maxWidth: 350, className: 'leaflet-popup-premium' }).openPopup();
+    }
+
+    // Expose functions
+    window.drillDown = drillDown;
+    window.navigateUp = navigateUp;
+    document.addEventListener('DOMContentLoaded', initMap);
+</script>
+
+<style>
+    /* Popup Specific Styles */
+    .popup-premium-container { font-family:'Outfit',sans-serif; min-width:280px; }
+    .popup-premium-container h3 { margin:0; color:#800000; font-size:16px; font-weight:800; }
+    .popup-meta { font-size:11px; color:#666; margin-bottom:10px; }
+    .popup-stats-grid { display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:12px; background:#f8f9fa; padding:10px; border-radius:8px; }
+    .popup-label { font-size:10px; color:#6c757d; font-weight:600; }
+    .popup-val { font-size:14px; color:#212529; font-weight:800; }
+    .popup-sub { font-size:10px; color:#adb5bd; }
+    .popup-title { font-size:11px; font-weight:700; color:#495057; margin-bottom:8px; text-transform:uppercase; }
+    .popup-paslon-row { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:4px; }
+    .popup-paslon-name { font-size:11px; font-weight:700; }
+    .popup-paslon-name span { color:white; padding:1px 4px; border-radius:3px; margin-right:4px; }
+    .popup-paslon-perc { font-size:11px; font-weight:700; }
+    .popup-paslon-perc span { font-weight:400; color:#888; font-size:10px; }
+    .popup-progress-bg { height:6px; background:#eee; border-radius:3px; overflow:hidden; }
+    .popup-progress-bg div { height:100%; transition: width 0.5s ease; }
+    .popup-accuracy-grid { display:flex; gap:8px; margin-top:12px; border-top:1px solid #eee; padding-top:8px; }
+    .popup-accuracy-grid div { flex:1; padding:6px; border-radius:4px; text-align:center; font-size:11px; font-weight:800; }
+    .accuracy-sah { background:#e6f4ea; color:#1e7e34; }
+    .accuracy-sts { background:#fbeaea; color:#c82333; }
+    .btn-popup { background:#800000; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer; width:100%; margin-top:15px; font-weight:700; font-size:12px; }
+    .btn-popup-disabled { background:#ccc; color:#666; border:none; padding:10px; border-radius:8px; cursor:not-allowed; width:100%; margin-top:15px; font-weight:700; font-size:12px; }
+    .popup-no-data { padding:15px; text-align:center; color:#999; font-style:italic; font-size:12px; }
+</style>

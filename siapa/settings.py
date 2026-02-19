@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'import_export',
     'pemilu2024',
+    'peta',
 ]
 
 MIDDLEWARE = [
@@ -175,5 +176,10 @@ JAZZMIN_SETTINGS = {
     "navigation_expanded": True,
 }
 # Import Export Settings (Fix for Windows FileNotFoundError)
+# Import Export Settings (Fix for Windows FileNotFoundError)
 IMPORT_EXPORT_TMP_STORAGE_CLASS = 'import_export.tmp_storages.CacheStorage'
 IMPORT_EXPORT_SKIP_ADMIN_LOG = True
+
+# Increase Memory Limit for GeoJSON Uploads (Default is 2.5MB)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800 # 50MB
+

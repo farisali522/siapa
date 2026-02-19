@@ -1,0 +1,18 @@
+<script>
+    /**
+     * PILEG RI MODE HANDLER
+     */
+    const PilegRiMode = {
+        name: 'pileg_ri',
+        calculateRecap: function(features, titleContext) {
+            const realContent = document.getElementById('recapRealContent');
+            const placeholder = document.getElementById('recapContentPlaceholder');
+            placeholder.style.display = 'block';
+            placeholder.innerHTML = '<i class="fas fa-info-circle"></i> Mode Pileg DPR RI Sedang Dalam Pengembangan.';
+            realContent.style.display = 'none';
+        },
+        renderPopup: function(props) {
+            return '<div class="popup-no-data">Data Pileg DPR RI belum dimuat.</div>';
+        }
+    };
+</script>

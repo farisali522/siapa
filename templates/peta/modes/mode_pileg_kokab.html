@@ -1,0 +1,18 @@
+<script>
+    /**
+     * PILEG KAB/KOTA MODE HANDLER
+     */
+    const PilegKokabMode = {
+        name: 'pileg_kokab',
+        calculateRecap: function(features, titleContext) {
+            const realContent = document.getElementById('recapRealContent');
+            const placeholder = document.getElementById('recapContentPlaceholder');
+            placeholder.style.display = 'block';
+            placeholder.innerHTML = '<i class="fas fa-info-circle"></i> Mode Pileg DPRD Kab/Kota Sedang Dalam Pengembangan.';
+            realContent.style.display = 'none';
+        },
+        renderPopup: function(props) {
+            return '<div class="popup-no-data">Data Pileg DPRD Kab/Kota belum dimuat.</div>';
+        }
+    };
+</script>

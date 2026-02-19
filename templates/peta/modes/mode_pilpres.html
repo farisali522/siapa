@@ -1,0 +1,119 @@
+<script>
+    /**
+     * PILPRES MODE HANDLER
+     * Menangani perhitungan rekap dan rendering popup khusus Pilpres
+     */
+    const PilpresMode = {
+        name: 'pilpres',
+        
+        // 1. Hitung Rekapitulasi Pilpres
+        calculateRecap: function(features, titleContext) {
+            let total_sah = 0, total_sts = 0, total_dpt = 0, total_tps = 0, s1 = 0, s2 = 0, s3 = 0, hasData = false;
+            
+            features.forEach(f => {
+                const d = f.properties.detail_pilpres;
+                if (d) {
+                    hasData = true;
+                    total_sah += (d.sah || 0); total_sts += (d.sts || 0);
+                    total_dpt += (d.dpt || 0); total_tps += (d.tps || 0);
+                    s1 += (d.s1 || 0); s2 += (d.s2 || 0); s3 += (d.s3 || 0);
+                }
+            });
+
+            let p1 = { nama: "Anies-Muhaimin", warna: "#ffcc00" }, 
+                p2 = { nama: "Prabowo-Gibran", warna: "#0056b3" }, 
+                p3 = { nama: "Ganjar-Mahfud", warna: "#dc3545" };
+
+            if (hasData) {
+                const first = features.find(f => f.properties.detail_pilpres && f.properties.detail_pilpres.paslon_data);
+                if (first) {
+                    const pd = first.properties.detail_pilpres.paslon_data;
+                    if (pd[1]) p1 = pd[1]; if (pd[2]) p2 = pd[2]; if (pd[3]) p3 = pd[3];
+                }
+            }
+
+            const getBg = (h) => h + "15";
+            const realContent = document.getElementById('recapRealContent');
+            const placeholder = document.getElementById('recapContentPlaceholder');
+
+            if (!hasData) {
+                placeholder.style.display = 'block';
+                placeholder.innerHTML = 'Tidak ada data Pilpres untuk wilayah ini.';
+                realContent.style.display = 'none';
+                return;
+            }
+
+            placeholder.style.display = 'none';
+            realContent.style.display = 'block';
+
+            const total_suara = total_sah + total_sts;
+            const p1p = total_sah > 0 ? ((s1/total_sah)*100).toFixed(1) : 0;
+            const p2p = total_sah > 0 ? ((s2/total_sah)*100).toFixed(1) : 0;
+            const p3p = total_sah > 0 ? ((s3/total_sah)*100).toFixed(1) : 0;
+            const part = total_dpt > 0 ? ((total_suara/total_dpt)*100).toFixed(1) : 0;
+
+            realContent.innerHTML = `
+                <div class="recap-container">
+                    <div class="recap-card">
+                        <div class="card-label">Partisipasi & DPT</div>
+                        <div class="card-val-big" style="color:#6f42c1;">${part}%</div>
+                        <div class="card-multi-row">
+                            <div class="card-val-sub">DPT: ${total_dpt.toLocaleString()}</div>
+                            <div class="card-val-sub">TPS: ${total_tps.toLocaleString()}</div>
+                        </div>
+                    </div>
+                    <!-- Paslon Cards -->
+                    ${ [ {no:'01',p:p1,perc:p1p,v:s1}, {no:'02',p:p2,perc:p2p,v:s2}, {no:'03',p:p3,perc:p3p,v:s3} ].map(item => `
+                        <div class="recap-card" style="background: ${getBg(item.p.warna)}; border-left: 4px solid ${item.p.warna};">
+                            <div class="paslon-accent-no">${item.no}</div>
+                            <div class="card-label">${item.no} ${item.p.nama}</div>
+                            <div class="card-val-big" style="color:${item.p.warna};">${item.perc}%</div>
+                            <div class="card-val-sub">${item.v.toLocaleString()} Suara</div>
+                        </div>
+                    `).join('') }
+                    <div class="recap-card">
+                        <div class="card-label">Akurasi Suara</div>
+                        <div class="card-val-sub" style="margin-bottom:5px;">Total: ${total_suara.toLocaleString()}</div>
+                        <div class="card-multi-row">
+                            <div><div class="card-label" style="font-size:7px; color:#28a745;">Sah</div><div class="card-val-sub" style="color:#28a745;">${total_sah.toLocaleString()}</div></div>
+                            <div><div class="card-label" style="font-size:7px; color:#dc3545;">T. Sah</div><div class="card-val-sub" style="color:#dc3545;">${total_sts.toLocaleString()}</div></div>
+                        </div>
+                    </div>
+                </div>`;
+        },
+
+        // 2. Render Popup Pilpres
+        renderPopup: function(props) {
+            if (!props.detail_pilpres) return '<div class="popup-no-data">Data Pilpres belum tersedia.</div>';
+            
+            const d = props.detail_pilpres;
+            const pd = d.paslon_data || {};
+            const total = d.sah + d.sts;
+            const partisipasi = d.dpt > 0 ? ((total / d.dpt) * 100).toFixed(1) : 0;
+            const getP = (no) => pd[no] || { nama: `Paslon ${no}`, warna: '#808080' };
+            const p1=getP(1), p2=getP(2), p3=getP(3);
+
+            return `
+                <div class="popup-stats-grid">
+                    <div><div class="popup-label">PARTISIPASI</div><div class="popup-val">${partisipasi}%</div><div class="popup-sub">dari ${d.dpt.toLocaleString()} DPT</div></div>
+                    <div style="text-align:right;"><div class="popup-label">TOTAL SUARA</div><div class="popup-val">${total.toLocaleString()}</div><div class="popup-sub">TPS: ${d.tps.toLocaleString()}</div></div>
+                </div>
+                <div class="popup-title">Perolehan Suara Paslon</div>
+                ${ [ {p:p1, v:d.s1, perc:d.sah > 0 ? ((d.s1/d.sah)*100).toFixed(1) : 0, no:'01'},
+                     {p:p2, v:d.s2, perc:d.sah > 0 ? ((d.s2/d.sah)*100).toFixed(1) : 0, no:'02'},
+                     {p:p3, v:d.s3, perc:d.sah > 0 ? ((d.s3/d.sah)*100).toFixed(1) : 0, no:'03'} ].map(i => `
+                    <div style="margin-bottom:8px;">
+                        <div class="popup-paslon-row">
+                            <div class="popup-paslon-name" style="color:${i.p.warna}"><span style="background:${i.p.warna}; color:white;"> ${i.no}</span> ${i.p.nama}</div>
+                            <div class="popup-paslon-perc">${i.perc}% <span>(${i.v.toLocaleString()})</span></div>
+                        </div>
+                        <div class="popup-progress-bg"><div style="background:${i.p.warna}; width:${i.perc}%;"></div></div>
+                    </div>
+                `).join('') }
+                <div class="popup-accuracy-grid">
+                    <div class="accuracy-sah">SAH: ${d.sah.toLocaleString()}</div>
+                    <div class="accuracy-sts">T.SAH: ${d.sts.toLocaleString()}</div>
+                </div>`;
+        }
+    };
+</script>

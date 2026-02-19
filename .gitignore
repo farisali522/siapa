@@ -77,5 +77,8 @@ coverage.xml
 # mypy
 .mypy_cache/
 
-# Local docs
+# Local docs & Backups
 vps-pull.md
+vps-backup.md
+*.sql
+*.sql.gz

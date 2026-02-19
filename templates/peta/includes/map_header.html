@@ -1,0 +1,59 @@
+<!-- FLOATING HEADER CONTROLS -->
+<div class="map-floating-header">
+    
+    <!-- Group 1: Analysis Mode -->
+    <div class="header-group flex-2">
+        <div class="header-label hide-mobile">Mode:</div>
+        <select id="analysis-mode" onchange="changeAnalysisMode(this.value)" class="header-select">
+            <option value="all">Analisis Pemetaan</option>
+            <option value="pilpres">Pilpres (Presiden)</option>
+            <option value="pileg_ri">Pileg DPR RI</option>
+            <option value="pileg_prov">Pileg DPRD Prov</option>
+            <option value="pileg_kokab">Pileg DPRD Kab/Kota</option>
+        </select>
+    </div>
+
+    <div class="header-divider"></div>
+
+    <!-- Group 2: Navigation -->
+    <div class="header-group flex-3">
+         <!-- Default Selector -->
+         <div id="global-selector" style="width:100%; display:flex; gap:10px; align-items:center;">
+            <select id="level-select" onchange="resetToLevel(this.value)" class="header-select">
+                <option value="kokab" selected>Semua Kab/Kota</option>
+                <option value="kecamatan">Semua Kecamatan</option>
+            </select>
+        </div>
+
+        <!-- Breadcrumb / Back Button -->
+        <div id="drilldown-nav" style="display:none; width:100%;">
+            <div style="display:flex; align-items:center; gap:12px; background: #fff; padding: 4px 12px; border-radius: 12px; border: 1px solid #eee;">
+                <button onclick="navigateUp()" style="background:var(--maroon); color:white; border:none; padding: 8px 14px; border-radius:8px; cursor:pointer; transition: 0.2s;">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div id="breadcrumb-text" style="font-weight: 800; color: var(--maroon); font-size:14px; text-transform: uppercase; letter-spacing:0.5px;">Jawa Barat</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="header-divider"></div>
+
+    <!-- Group 3: Status Info -->
+    <div class="status-group header-group flex-1">
+         <div class="status-pill live">
+            <div class="pulse" style="width:8px; height:8px; background:#2e7d32; border-radius:50%; animation: pulse-green 2s infinite;"></div> 
+            <span class="mobile-label">Live</span><span class="hide-mobile"> Connection</span>
+        </div>
+        <div class="status-pill count">
+            <i class="fas fa-map-marker-alt"></i> <span id="count-wilayah">0</span>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes pulse-green {
+        0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+    }
+</style>
