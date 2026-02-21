@@ -13,9 +13,9 @@
         {% endif %}
 
         {% if user.is_superuser or user.groups.all.0.name == 'map' or user.groups.all.1.name == 'map' %}
-        <!-- Peta Digital: Superuser & Map Group -->
+        <!-- Menampilkam menu kembali, link sementara ke '#' agar tidak error -->
         <li class="nav-item">
-            <a href="{% url 'dashboard_peta' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard_peta' %}active{% endif %}">
+            <a href="{% url 'dashboard_map' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard_map' %}active{% endif %}">
                 <i class="fas fa-map-marked-alt nav-icon"></i>
                 <span class="nav-text">Peta Digital</span>
             </a>

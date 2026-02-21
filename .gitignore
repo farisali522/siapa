@@ -82,3 +82,5 @@ vps-pull.md
 vps-backup.md
 *.sql
 *.sql.gz
+PANDUAN_BACKUP.md
+*.json

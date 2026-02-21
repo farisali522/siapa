@@ -48,8 +48,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'import_export',
-    'pemilu2024',
-    'peta',
+    'core',
+    'pilpres_2024',
+    'pilegri_2024',
 ]
 
 MIDDLEWARE = [
@@ -165,7 +166,7 @@ JAZZMIN_SETTINGS = {
     "site_brand": "SIAPA",
     "welcome_sign": "Welcome to SIAPA",
     "copyright": "Sistem Informasi Administrasi & Pusat Analisis",
-    "changeform_format": "horizontal_tabs",
+    "changeform_format": "vertical_tabs",
     # Link Permanen di Top Menu Admin
     "topmenu_links": [
         {"name": "Beranda", "url": "admin:index", "permissions": ["auth.view_user"]},
