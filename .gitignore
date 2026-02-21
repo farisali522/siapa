@@ -84,4 +84,4 @@ vps-backup.md
 *.sql
 *.sql.gz
 PANDUAN_BACKUP.md
-*.json
+#*.json
