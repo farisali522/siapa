@@ -42,7 +42,7 @@ venv.bak/
 /static_root/
 
 # Media files - UNCOMMENT line below if you don't want to commit media files
-/media/
+#/media/
 
 # IDE
 .vscode/
@@ -62,7 +62,8 @@ logs/
 
 # Backup files
 *.bak
-backup_*.json
+# backup_*.json  <-- Berikan tanda pagar di sini agar backup_full.json tidak diabaikan
+# *.json         <-- Jika ada baris ini, berikan tanda pagar juga
 
 # Coverage reports
 htmlcov/
