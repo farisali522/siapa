@@ -1,10 +1,14 @@
-# Menambahkan semua perubahan (termasuk file gambar rekap baru)
+# Reset repository
+git rm -r --cached .
+# Push ke GitHub
+
 git add .
 git commit -m "Update"
 git push origin main
 
-# Untuk pengguna Windows (PowerShell)
-Compress-Archive -Path media -DestinationPath media.zip
+# Clone pertama kali (jika belum ada foldernya)
+git clone https://github.com/farisali522/siapa.git
+cd siapa
 
-# Untuk pengguna Linux/Mac/Git Bash di Windows
-zip -r media.zip media/
+
+git pull origin main && source venv/bin/activate && pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput && python manage.py loaddata backup_full.json
