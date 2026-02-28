@@ -85,3 +85,6 @@ vps-backup.md
 *.sql.gz
 PANDUAN_BACKUP.md
 #*.json
+# Jangan abaikan file backup ini
+!backup_data_only.json
+#!backup_peta_only.json

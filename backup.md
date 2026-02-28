@@ -8,7 +8,20 @@ Berikut adalah perintah-perintah resmi untuk melakukan backup (dump) dan mengemb
 
 Gunakan perintah ini untuk menyimpan data dari database ke file JSON.
 
-### A. Backup Seluruh Database (Paling Komplit)
+### A. Backup Data Master & Suara (Tanpa Peta - Ringan)
+> [!TIP]
+> Gunakan cara ini jika hanya ingin backup data perolehan suara, caleg, partai, dll tanpa data koordinat peta yang berat.
+
+```powershell
+python manage.py dumpdata --natural-foreign --natural-primary -e contenttypes -e auth.permission -e geojson --indent 4 > backup_data_only.json
+```
+
+### B. Backup Khusus Data Peta (GeoJSON)
+```powershell
+python manage.py dumpdata geojson --indent 4 > backup_peta_only.json
+```
+
+### C. Backup Seluruh Database (Paling Komplit + Peta)
 ```powershell
 python manage.py dumpdata --natural-foreign --natural-primary -e contenttypes -e auth.permission --indent 4 > backup_full.json
 ```
