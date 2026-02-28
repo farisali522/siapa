@@ -1,18 +1,182 @@
+<style>
+    .pileg-recap-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+    }
+    .party-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        width: 100%;
+    }
+    @media (min-width: 768px) and (max-width: 1023px) {
+        .pileg-recap-wrapper {
+            flex-direction: row;
+            align-items: flex-start;
+        }
+        .pileg-left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 250px;
+            flex-shrink: 0;
+        }
+        .party-grid {
+            grid-template-columns: repeat(5, 1fr);
+        }
+    }
+    @media (min-width: 1024px) {
+        .pileg-recap-wrapper {
+            flex-direction: row;
+            align-items: flex-start;
+        }
+        .pileg-left-col {
+            display: flex;
+            flex-direction: row;
+            gap: 12px;
+            width: 480px;
+            flex-shrink: 0;
+        }
+        .pileg-left-col .recap-card {
+            flex: 1;
+        }
+        .party-grid {
+            grid-template-columns: repeat(10, 1fr);
+        }
+    }
+</style>
 <script>
     /**
      * PILEG RI MODE HANDLER
      */
     const PilegRiMode = {
         name: 'pileg_ri',
+        
+        // 1. Hitung Rekapitulasi Pileg
         calculateRecap: function(features, titleContext) {
+            let total_sah = 0, total_sts = 0, total_dpt = 0, total_tps = 0, hasData = false;
+            let aggPartai = {};
+
+            features.forEach(f => {
+                const d = f.properties.detail_pileg_ri;
+                if (d) {
+                    hasData = true;
+                    total_sah += (d.sah || 0); total_sts += (d.sts || 0);
+                    total_dpt += (d.dpt || 0); total_tps += (d.tps || 0);
+                    
+                    if (d.partai_data) {
+                        for (const [no, pData] of Object.entries(d.partai_data)) {
+                            if (!aggPartai[no]) {
+                                aggPartai[no] = { nama: pData.nama, warna: pData.warna, no_urut: no, logo_url: pData.logo_url, sum: 0 };
+                            }
+                            aggPartai[no].sum += (pData.suara || 0);
+                        }
+                    }
+                }
+            });
+
             const realContent = document.getElementById('recapRealContent');
             const placeholder = document.getElementById('recapContentPlaceholder');
-            placeholder.style.display = 'block';
-            placeholder.innerHTML = '<i class="fas fa-info-circle"></i> Mode Pileg DPR RI Sedang Dalam Pengembangan.';
-            realContent.style.display = 'none';
+
+            if (!hasData) {
+                placeholder.style.display = 'block';
+                placeholder.innerHTML = 'Tidak ada data Pileg DPR RI untuk wilayah ini.';
+                realContent.style.display = 'none';
+                return;
+            }
+
+            placeholder.style.display = 'none';
+            realContent.style.display = 'block';
+
+            const total_suara = total_sah + total_sts;
+            const part = total_dpt > 0 ? ((total_suara/total_dpt)*100).toFixed(1) : 0;
+
+            // Sort parties by sum desc
+            let sortedParties = Object.values(aggPartai).sort((a,b) => b.sum - a.sum);
+
+            realContent.innerHTML = `
+                <div class="pileg-recap-wrapper">
+                    <div class="pileg-left-col">
+                        <div class="recap-card">
+                            <div class="card-label">Partisipasi & DPT</div>
+                            <div class="card-val-big" style="color:#6f42c1;">${part}%</div>
+                            <div class="card-multi-row">
+                                <div class="card-val-sub">DPT: ${total_dpt.toLocaleString()}</div>
+                                <div class="card-val-sub">TPS: ${total_tps.toLocaleString()}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="recap-card">
+                            <div class="card-label">Akurasi Suara</div>
+                            <div class="card-val-sub" style="margin-bottom:5px;">Masuk: ${total_suara.toLocaleString()}</div>
+                            <div class="card-multi-row">
+                                <div><div class="card-label" style="font-size:7px; color:#28a745;">Sah</div><div class="card-val-sub" style="color:#28a745;">${total_sah.toLocaleString()}</div></div>
+                                <div><div class="card-label" style="font-size:7px; color:#dc3545;">T. Sah</div><div class="card-val-sub" style="color:#dc3545;">${total_sts.toLocaleString()}</div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="flex-grow: 1; display: flex; flex-direction: column; padding-left: 5px; width: 100%;">
+                        <div style="width:100%; font-size:10px; font-weight:bold; color:#666; margin-bottom:8px;">PEROLEHAN PARTAI :</div>
+                        <div class="party-grid">
+                        ${ sortedParties.map(item => {
+                            let perc = total_sah > 0 ? ((item.sum/total_sah)*100).toFixed(1) : 0;
+                            let logoHtml = item.logo_url ? `<img src="${item.logo_url}" style="height:22px; max-width:100%; object-fit:contain; margin-bottom:2px;">` : `<div style="font-weight:700; font-size:11px;">$${item.no_urut}</div>`;
+                            return `
+                            <div style="background: #ffffff; padding: 4px; border: 1px solid #e1e4e8; border-radius: 6px; text-align: center; border-bottom: 3px solid ${item.warna}; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+                                <div style="height:26px; display:flex; align-items:center; justify-content:center;" title="${item.nama}">${logoHtml}</div>
+                                <div style="font-size: 11px; font-weight: 800; color: ${item.warna}; line-height:1;">${perc}%</div>
+                                <div style="font-size: 9px; color: #666; margin-top:3px;">${item.sum.toLocaleString()}</div>
+                            </div>
+                            `;
+                        }).join('') }
+                        </div>
+                    </div>
+                </div>`;
         },
+
+        // 2. Render Popup Pileg
         renderPopup: function(props) {
-            return '<div class="popup-no-data">Data Pileg DPR RI belum dimuat.</div>';
+            if (!props.detail_pileg_ri) return '<div class="popup-no-data">Data Pileg RI belum dimuat.</div>';
+            
+            const d = props.detail_pileg_ri;
+            const pd = d.partai_data || {};
+            const total = d.sah + d.sts;
+            const partisipasi = d.dpt > 0 ? ((total / d.dpt) * 100).toFixed(1) : 0;
+
+            let partyList = [];
+            for (const [no, p] of Object.entries(pd)) {
+                partyList.push({ ...p, no_urut: no });
+            }
+            // Tampilkan top 5 terbesar di popup
+            partyList.sort((a,b) => b.suara - a.suara);
+            const topParties = partyList.slice(0, 5);
+
+            return `
+                <div class="popup-stats-grid">
+                    <div><div class="popup-label">PARTISIPASI</div><div class="popup-val">${partisipasi}%</div><div class="popup-sub">dari ${d.dpt.toLocaleString()} DPT</div></div>
+                    <div style="text-align:right;"><div class="popup-label">TOTAL SUARA</div><div class="popup-val">${total.toLocaleString()}</div><div class="popup-sub">TPS: ${d.tps.toLocaleString()}</div></div>
+                </div>
+                <div class="popup-title">TOP 5 PARTAI (DPR RI)</div>
+                ${ topParties.map(i => {
+                    let perc = d.sah > 0 ? ((i.suara/d.sah)*100).toFixed(1) : 0;
+                    let logoHtml = i.logo_url ? `<img src="${i.logo_url}" style="height:18px; width:18px; object-fit:contain; margin-right:6px; background:white; border-radius:3px; padding:1px;">` : `<span style="background:${i.warna}; color:white; padding:0 4px; border-radius:3px; margin-right:6px; font-weight:bold;">${i.no_urut}</span>`;
+                    return `
+                    <div style="margin-bottom:8px;">
+                        <div class="popup-paslon-row" style="align-items:center;">
+                            <div class="popup-paslon-name" style="color:#333; display:flex; align-items:center;">${logoHtml} <span>${i.nama}</span></div>
+                            <div class="popup-paslon-perc" style="color:${i.warna};">${perc}% <span>(${i.suara.toLocaleString()})</span></div>
+                        </div>
+                        <div class="popup-progress-bg"><div style="background:${i.warna}; width:${perc}%;"></div></div>
+                    </div>
+                    `;
+                }).join('') }
+                <div class="popup-accuracy-grid">
+                    <div class="accuracy-sah">SAH: ${d.sah.toLocaleString()}</div>
+                    <div class="accuracy-sts">T.SAH: ${d.sts.toLocaleString()}</div>
+                </div>`;
         }
     };
 </script>

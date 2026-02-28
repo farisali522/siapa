@@ -18,6 +18,16 @@
     }
 
     // --- UI HELPERS ---
+    function darkenHexColor(hex) {
+        if (!hex) return "#555555";
+        let c = hex.replace('#', '');
+        if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2]; // Fallback for 3-char hex
+        let r = Math.max(0, parseInt(c.slice(0, 2), 16) - 35).toString(16).padStart(2,'0');
+        let g = Math.max(0, parseInt(c.slice(2, 4), 16) - 35).toString(16).padStart(2,'0');
+        let b = Math.max(0, parseInt(c.slice(4, 6), 16) - 35).toString(16).padStart(2,'0');
+        return '#' + r + g + b;
+    }
+
     function toggleFooterPanel() {
         const panel = document.getElementById('mainFooterPanel');
         const icon = document.getElementById('footerToggleIcon');
@@ -146,7 +156,10 @@
 
                     currentGeoLayer = L.geoJSON(data, {
                         levelName: level, apiParams: params,
-                        style: f => ({ color: f.properties.warna, weight: 1.5, opacity: 0.9, fillOpacity: 0.75, fillColor: f.properties.warna || "#800000" }),
+                        style: f => {
+                            let baseWarna = f.properties.warna || "#808080";
+                            return { color: darkenHexColor(baseWarna), weight: 1.2, opacity: 1.0, fillOpacity: f.properties.fill_opacity || 0.65, fillColor: baseWarna };
+                        },
                         onEachFeature: (feature, layer) => {
                             const props = feature.properties;
                             layer.bindTooltip(`<div class="label-content">${props.nama}</div>`, { permanent: true, direction: 'center', className: 'map-label-responsive', opacity: 0.9 });

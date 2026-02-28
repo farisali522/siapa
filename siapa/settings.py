@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'core',
     'pilpres_2024',
     'pilegri_2024',
+    'geojson',
 ]
 
 MIDDLEWARE = [

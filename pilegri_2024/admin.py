@@ -158,7 +158,7 @@ class CalegAdmin(ImportExportModelAdmin):
 
     @admin.display(description='Caleg', ordering='no_urut')
     def get_caleg(self, obj):
-        foto = format_html('<div style="background:#fff; padding:2px; border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:center; margin-right:15px; width:45px; height:55px; border:1px solid #ddd;"><img src="{}" style="max-width:100%; max-height:100%; object-fit:cover; border-radius:2px;" /></div>', obj.foto.url) if obj.foto else format_html('<div style="background:#f9f9f9; border-radius:6px; margin-right:15px; width:45px; height:55px; display:flex; align-items:center; justify-content:center; border:1px dashed #ccc; color:#aaa; font-size:9px; text-align:center; line-height:1;">No Photo</div>')
+        foto = format_html('<div style="background:#fff; padding:2px; border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:center; margin-right:15px; width:45px; height:55px; border:1px solid #ddd;"><img src="{}" style="max-width:100%; max-height:100%; object-fit:cover; border-radius:2px;" /></div>', obj.foto.url) if obj.foto else format_html('<div style="background:#f9f9f9; border-radius:6px; margin-right:15px; width:45px; height:55px; display:flex; align-items:center; justify-content:center; border:1px dashed #ccc; color:#aaa; font-size:11.5px; text-align:center; line-height:1;">No Photo</div>')
         return format_html('<div style="display:flex; align-items:center; padding:4px 0;"><div style="min-width:24px; height:24px; background:#333; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px; margin-right:12px;">{}</div>{} <b>{}</b></div>', obj.no_urut, foto, obj.nama)
 
     @admin.display(description='Partai')
@@ -224,7 +224,7 @@ class RekapSuaraAdmin(ImportExportModelAdmin):
                     pct = (v / t_sah) * 100
                     p_str = f"({pct:.1f}%)"
                     return format_html(
-                        '<div style="text-align:center; min-width:50px;"><a href="{}"><b>{}</b></a><br><small style="color:#666; font-size:9px;">{}</small></div>', 
+                        '<div style="text-align:center; min-width:50px;"><a href="{}"><b>{}</b></a><br><small style="color:#666; font-size:11.5px;">{}</small></div>', 
                         full_url, fmt_v, p_str
                     )
                 return format_html('<div style="text-align:center;"><a href="{}">{}</a></div>', full_url, fmt_v)
@@ -233,7 +233,7 @@ class RekapSuaraAdmin(ImportExportModelAdmin):
                 _gv.short_description = mark_safe(
                     f'<div style="text-align:center; min-width:40px;">'
                     f'<img src="{p_logo}" title="{p_name}" style="height:20px; width:20px; object-fit:contain;"><br>'
-                    f'<span style="font-size:9px; font-weight:normal; display:block; margin-top:2px;">{p_name}</span>'
+                    f'<span style="font-size:11.5px; font-weight:normal; display:block; margin-top:2px;">{p_name}</span>'
                     f'</div>'
                 )
             else:
@@ -401,19 +401,19 @@ class RekapSuaraAdmin(ImportExportModelAdmin):
     def get_sh_static(self, obj):
         v, t = obj.t_sah, obj.t_total
         p = f"({(v/t*100):.1f}%)" if t > 0 else "(0.0%)"
-        return format_html('<div style="text-align:center;"><a href="#"><b>{}</b></a><br><small style="color:#666; font-size:9px;">{}</small></div>', self._fmt(v), p)
+        return format_html('<div style="text-align:center;"><a href="#"><b>{}</b></a><br><small style="color:#666; font-size:11.5px;">{}</small></div>', self._fmt(v), p)
 
     @admin.display(description='Tidak Sah')
     def suara_total_tidak_sah_fmt_static(self, obj):
         v, t = obj.suara_tidak_sah, obj.t_total
         p = f"({(v/t*100):.1f}%)" if t > 0 else "(0.0%)"
-        return format_html('<div style="text-align:center;"><a href="#"><b>{}</b></a><br><small style="color:#666; font-size:9px;">{}</small></div>', self._fmt(v), p)
+        return format_html('<div style="text-align:center;"><a href="#"><b>{}</b></a><br><small style="color:#666; font-size:11.5px;">{}</small></div>', self._fmt(v), p)
 
     @admin.display(description='Total Suara')
     def get_tt_static(self, obj):
         v, d = obj.t_total, obj.dpt_k
         p = f"({(v/d*100):.1f}%)" if d > 0 else "(0.0%)"
-        return format_html('<div style="text-align:center;"><a href="#"><b>{}</b></a><br><small style="color:#007bff; font-weight:bold; font-size:9px;">{}</small></div>', self._fmt(v), p)
+        return format_html('<div style="text-align:center;"><a href="#"><b>{}</b></a><br><small style="color:#007bff; font-weight:bold; font-size:11.5px;">{}</small></div>', self._fmt(v), p)
 
 @admin.register(DapilPilegRI)
 class DapilPilegRIAdmin(admin.ModelAdmin):
@@ -437,10 +437,10 @@ class DapilPilegRIAdmin(admin.ModelAdmin):
                     fmt_v = self._fmt(v)
                     if t_sah > 0:
                         p_str = f"({(v/t_sah*100):.1f}%)"
-                        return format_html('<div style="text-align:center; min-width:40px;"><b>{}</b><br><small style="color:#666; font-size:9px;">{}</small></div>', fmt_v, p_str)
+                        return format_html('<div style="text-align:center; min-width:40px;"><b>{}</b><br><small style="color:#666; font-size:11.5px;">{}</small></div>', fmt_v, p_str)
                     return format_html('<div style="text-align:center;">{}</div>', fmt_v)
                 if p_logo:
-                    _gv.short_description = mark_safe(f'<div style="text-align:center;"><img src="{p_logo}" style="height:20px;"><br><span style="font-size:9px;">{p_name}</span></div>')
+                    _gv.short_description = mark_safe(f'<div style="text-align:center;"><img src="{p_logo}" style="height:20px;"><br><span style="font-size:11.5px;">{p_name}</span></div>')
                 else:
                     _gv.short_description = p_name
                 setattr(self, f_name, _gv)
@@ -495,17 +495,17 @@ class DapilPilegRIAdmin(admin.ModelAdmin):
     @admin.display(description='Suara Sah')
     def get_sah_fmt(self, obj):
         p = f"({(obj.sah_total/obj.tt_total*100):.1f}%)" if obj.tt_total > 0 else "(0.0%)"
-        return format_html('<div style="text-align:center;"><b>{}</b><br><small style="color:#666; font-size:9px;">{}</small></div>', self._fmt(obj.sah_total), p)
+        return format_html('<div style="text-align:center;"><b>{}</b><br><small style="color:#666; font-size:11.5px;">{}</small></div>', self._fmt(obj.sah_total), p)
 
     @admin.display(description='Tidak Sah')
     def get_ts_fmt(self, obj):
         p = f"({(obj.ts_total/obj.tt_total*100):.1f}%)" if obj.tt_total > 0 else "(0.0%)"
-        return format_html('<div style="text-align:center;"><b>{}</b><br><small style="color:#666; font-size:9px;">{}</small></div>', self._fmt(obj.ts_total), p)
+        return format_html('<div style="text-align:center;"><b>{}</b><br><small style="color:#666; font-size:11.5px;">{}</small></div>', self._fmt(obj.ts_total), p)
 
     @admin.display(description='Total Suara')
     def get_tt_fmt(self, obj):
         p = f"({(obj.tt_total/obj.dpt_total*100):.1f}%)" if obj.dpt_total > 0 else "(0.0%)"
-        return format_html('<div style="text-align:center;"><b>{}</b><br><small style="color:#007bff; font-weight:bold; font-size:9px;">{}</small></div>', self._fmt(obj.tt_total), p)
+        return format_html('<div style="text-align:center;"><b>{}</b><br><small style="color:#007bff; font-weight:bold; font-size:11.5px;">{}</small></div>', self._fmt(obj.tt_total), p)
 @admin.register(KabupatenPilegRI)
 class KabupatenPilegRIAdmin(admin.ModelAdmin):
     list_display = ('nama',) # Dinamis
@@ -528,10 +528,10 @@ class KabupatenPilegRIAdmin(admin.ModelAdmin):
                     fmt_v = self._fmt(v)
                     if t_sah > 0:
                         p_str = f"({(v/t_sah*100):.1f}%)"
-                        return format_html('<div style="text-align:center; min-width:40px;"><b>{}</b><br><small style="color:#666; font-size:9px;">{}</small></div>', fmt_v, p_str)
+                        return format_html('<div style="text-align:center; min-width:40px;"><b>{}</b><br><small style="color:#666; font-size:11.5px;">{}</small></div>', fmt_v, p_str)
                     return format_html('<div style="text-align:center;">{}</div>', fmt_v)
                 if p_logo:
-                    _gv.short_description = mark_safe(f'<div style="text-align:center;"><img src="{p_logo}" style="height:20px;"><br><span style="font-size:9px;">{p_name}</span></div>')
+                    _gv.short_description = mark_safe(f'<div style="text-align:center;"><img src="{p_logo}" style="height:20px;"><br><span style="font-size:11.5px;">{p_name}</span></div>')
                 else:
                     _gv.short_description = p_name
                 setattr(self, f_name, _gv)
@@ -595,14 +595,14 @@ class KabupatenPilegRIAdmin(admin.ModelAdmin):
     @admin.display(description='Suara Sah')
     def get_sah_fmt(self, obj):
         p = f"({(obj.sah_total/obj.tt_total*100):.1f}%)" if obj.tt_total > 0 else "(0.0%)"
-        return format_html('<div style="text-align:center;"><b>{}</b><br><small style="color:#666; font-size:9px;">{}</small></div>', self._fmt(obj.sah_total), p)
+        return format_html('<div style="text-align:center;"><b>{}</b><br><small style="color:#666; font-size:11.5px;">{}</small></div>', self._fmt(obj.sah_total), p)
 
     @admin.display(description='Tidak Sah')
     def get_ts_fmt(self, obj):
         p = f"({(obj.ts_total/obj.tt_total*100):.1f}%)" if obj.tt_total > 0 else "(0.0%)"
-        return format_html('<div style="text-align:center;"><b>{}</b><br><small style="color:#666; font-size:9px;">{}</small></div>', self._fmt(obj.ts_total), p)
+        return format_html('<div style="text-align:center;"><b>{}</b><br><small style="color:#666; font-size:11.5px;">{}</small></div>', self._fmt(obj.ts_total), p)
 
     @admin.display(description='Total Suara')
     def get_tt_fmt(self, obj):
         p = f"({(obj.tt_total/obj.dpt_total*100):.1f}%)" if obj.dpt_total > 0 else "(0.0%)"
-        return format_html('<div style="text-align:center;"><b>{}</b><br><small style="color:#007bff; font-weight:bold; font-size:9px;">{}</small></div>', self._fmt(obj.tt_total), p)
+        return format_html('<div style="text-align:center;"><b>{}</b><br><small style="color:#007bff; font-weight:bold; font-size:11.5px;">{}</small></div>', self._fmt(obj.tt_total), p)

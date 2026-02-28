@@ -56,6 +56,8 @@ def dummy_map(request):
         return redirect('custom_login')
     return render(request, 'dashboard_map.html')
 
+from geojson.views import get_geo_data
+
 urlpatterns = [
     path('', dummy_landing, name='landing'),
     path('xxx/', admin.site.urls),
@@ -63,6 +65,7 @@ urlpatterns = [
     path('logout/', dummy_logout, name='custom_logout'),
     path('dashboard/', dummy_dashboard, name='dashboard_overview'),
     path('map/', dummy_map, name='dashboard_map'),
+    path('get_geo_data/', get_geo_data, name='get_geo_data'),
 ]
 
 from django.urls import re_path
