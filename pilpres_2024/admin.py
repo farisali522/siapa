@@ -247,6 +247,21 @@ class RekapSuaraAdmin(ImportExportModelAdmin):
     # SATU HALAMAN: Semua field tampil sekaligus tanpa pembatas
     fields = ('kecamatan', 'tps_target', 'dpt_target', 'suara_paslon_1', 'suara_paslon_2', 'suara_paslon_3', 'suara_tidak_sah')
 
+    def changelist_view(self, request, extra_context=None):
+        """Update header kolom secara dinamis berdasarkan data Paslon terbaru."""
+        from .models import PaslonPilpres
+        paslons = {p.no_urut: p.foto_paslon.url for p in PaslonPilpres.objects.all() if p.foto_paslon}
+        
+        for no in range(1, 4):
+            method_name = f'suara_paslon_{no}_fmt'
+            method = getattr(self, method_name, None)
+            if method and no in paslons:
+                method.description = format_html(
+                    '0{} <br> <img src="{}" style="width:25px;height:25px;border-radius:3px;border:1px solid #ddd;padding:1px;background:#fff;">', 
+                    no, paslons[no]
+                )
+        return super().changelist_view(request, extra_context)
+
     def get_queryset(self, request):
         """Optimasi penarikan data relasi dan perhitungan agregat di level SQL."""
         qs = super().get_queryset(request)
@@ -374,6 +389,21 @@ class KabupatenPilpresAdmin(admin.ModelAdmin):
                 output_field=IntegerField()
             ), 0)
         )
+
+    def changelist_view(self, request, extra_context=None):
+        """Update header kolom secara dinamis berdasarkan data Paslon terbaru."""
+        from .models import PaslonPilpres
+        paslons = {p.no_urut: p.foto_paslon.url for p in PaslonPilpres.objects.all() if p.foto_paslon}
+        
+        for no in range(1, 4):
+            method_name = f'suara_{no}_fmt'
+            method = getattr(self, method_name, None)
+            if method and no in paslons:
+                method.description = format_html(
+                    '0{} <br> <img src="{}" style="width:25px;height:25px;border-radius:3px;border:1px solid #ddd;padding:1px;background:#fff;">', 
+                    no, paslons[no]
+                )
+        return super().changelist_view(request, extra_context)
 
     def _fmt(self, val):
         return "{:,}".format(val or 0).replace(',', '.')
